@@ -1,0 +1,412 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================
+   Smooth UI Transitions
+=================== */
+html, body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Quicksand', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===================
+   Light Theme
+=================== */
+.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* ===================
+   Dark Theme
+=================== */
+.dark {
+  background-color: #0f172a;
+  color: #ffffff;
+}
+
+/* ===================
+   Link Hover Effects
+=================== */
+a {
+  transition: color 0.3s ease;
+}
+a:hover {
+  color: #1e90ff;
+}
+
+
+/* === Glowing Text for Jobsyme Brand === */
+.glow-text {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.glow-text:hover {
+  text-shadow: 
+    0 0 12px rgba(59, 130, 246, 0.9),
+    0 0 20px rgba(79, 70, 229, 0.6);
+}
+
+.pill {
+  border-radius: 9999px;
+}
+
+/* ===================
+   Login Page Animations
+=================== */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out;
+}
+
+
+/* =========================
+   TABLE BASE (FINAL FIX)
+========================= */
+
+.table-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border-radius: 12px;
+  position: relative;
+}
+
+/* Table */
+.custom-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate; /* IMPORTANT */
+  border-spacing: 0;
+}
+
+/* =========================
+   TABLE SYSTEM (FINAL)
+========================= */
+
+.table-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.table-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+/* Table */
+.custom-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* HEADER */
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #0f172a;
+  border-bottom: 2px solid #334155;
+  border-right: 1px solid #334155;
+}
+
+/* CELLS */
+.custom-table th,
+.custom-table td {
+  padding: 12px 16px;
+  white-space: nowrap;
+  border-right: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+}
+
+/* Sticky columns */
+.sticky-sno {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  background: #1e293b;
+}
+
+.sticky-name {
+  position: sticky;
+  left: 80px;
+  z-index: 40;
+  background: #1e293b;
+}
+
+/* Header sticky override */
+thead .sticky-sno,
+thead .sticky-name {
+  z-index: 60;
+  background: #0f172a;
+}
+
+/* Widths */
+.col-sno { width: 80px; min-width: 80px; }
+.col-name { width: 200px; min-width: 200px; }
+.col-email { width: 260px; min-width: 260px; }
+.col-small { width: 150px; min-width: 150px; }
+
+/* Hover */
+.custom-table tbody tr:hover {
+  background: #1e293b;
+}
+
+/* Scrollbar */
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}
+
+/* =========================
+   TABLE FINAL (STABLE)
+========================= */
+
+.table-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-scroll {
+  flex: 1;
+  overflow: auto;
+}
+/* =========================
+   TABLE FINAL (NO STICKY COLS)
+========================= */
+
+.table-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Table */
+.custom-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* HEADER (ONLY STICKY PART) */
+.custom-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #0f172a;
+  border-bottom: 2px solid #334155;
+  border-right: 1px solid #334155;
+}
+
+/* CELLS */
+.custom-table th,
+.custom-table td {
+  padding: 12px 16px;
+  white-space: nowrap;
+  border-right: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+}
+
+/* Widths */
+.col-sno { width: 80px; min-width: 80px; }
+.col-name { width: 200px; min-width: 200px; }
+.col-email { width: 260px; min-width: 260px; }
+.col-small { width: 150px; min-width: 150px; }
+
+/* Hover */
+.custom-table tbody tr:hover {
+  background: #1e293b;
+}
+
+/* Scrollbar */
+.table-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.table-scroll::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}
+/* =========================
+   HEADER (STICKY FIX)
+========================= */
+
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 50; /* HIGH */
+  background: #0f172a;
+  border-bottom: 2px solid #334155;
+  border-right: 1px solid #334155;
+}
+
+/* =========================
+   CELLS
+========================= */
+
+.custom-table th,
+.custom-table td {
+  padding: 12px 16px;
+  white-space: nowrap;
+  border-right: 1px solid #334155;
+  border-bottom: 1px solid #334155;
+}
+
+/* Fix last column */
+.custom-table th:last-child,
+.custom-table td:last-child {
+  border-right: none;
+}
+
+/* =========================
+   ROW HOVER
+========================= */
+
+.custom-table tbody tr:hover {
+  background: #1e293b;
+}
+
+/* =========================
+   STICKY COLUMNS (PERFECT FIX)
+========================= */
+
+/* SNO */
+.sticky-col-1 {
+  position: sticky;
+  left: 0;
+  z-index: 40;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+}
+
+/* FIRST NAME */
+.sticky-col-2 {
+  position: sticky;
+  left: 80px;
+  z-index: 40;
+  background: #1e293b;
+  border-right: 1px solid #334155;
+}
+
+/* HEADER sticky columns (higher layer) */
+thead .sticky-col-1,
+thead .sticky-col-2 {
+  z-index: 60;
+  background: #0f172a;
+}
+
+/* =========================
+   COLUMN WIDTHS (STRICT)
+========================= */
+
+.col-sno {
+  width: 80px;
+  min-width: 80px;
+}
+
+.col-name {
+  width: 180px;
+  min-width: 180px;
+}
+
+.col-email {
+  width: 260px;
+  min-width: 260px;
+}
+
+.col-small {
+  width: 140px;
+  min-width: 140px;
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+
+.table-container::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 10px;
+}

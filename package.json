@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-datepicker": "^9.1.0",
+    "react-hot-toast": "^2.6.0"
+  }
+}
