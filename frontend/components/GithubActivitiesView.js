@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { authAPI } from "../services/authAPI";
 
-export default function GithubView({ candidateId, date }) {
+export default function GithubActivitiesView({ candidateId, date }) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -20,65 +20,63 @@ export default function GithubView({ candidateId, date }) {
   if (!data) return <p className="text-gray-400">Loading...</p>;
 
   const project = data.current_project || {};
-  const activities = data.recent_activity || [];
+  const activity = data.recent_activity || [];
   const summary = data.summary || {};
   const completed = data.completed_projects || [];
 
   return (
     <div className="space-y-6">
 
-      {/* CURRENT PROJECT */}
-      <div className="bg-[var(--card)] p-6 rounded-xl border border-[var(--border-color)]">
+      {/* ================= CURRENT PROJECT ================= */}
+      <div className="card p-5">
 
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-green-400">●</span>
-          <h2 className="font-semibold">Current Project</h2>
+          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+          <p className="section-title">Current Project</p>
         </div>
 
-        <div className="flex justify-between gap-6 flex-wrap">
+        <div className="grid md:grid-cols-2 gap-6">
 
           {/* LEFT */}
-          <div className="flex-1 min-w-[250px]">
-            <h3 className="text-lg font-semibold">
+          <div>
+            <h3 className="font-semibold text-lg">
               {project.name || "Project Name"}
             </h3>
 
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Started: {project.start_date || "-"}
             </p>
 
             {/* PROGRESS */}
             <div className="mt-3">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="progress-bar">
                 <div
-                  className="bg-green-500 h-2 rounded-full"
+                  className="progress-fill"
                   style={{ width: `${project.progress || 0}%` }}
                 />
               </div>
 
-              <p className="text-xs mt-1 text-gray-400">
+              <p className="text-xs mt-1 text-[var(--text-secondary)]">
                 Progress: {project.progress || 0}%
               </p>
             </div>
           </div>
 
           {/* RIGHT */}
-          <div className="flex-1 min-w-[250px]">
+          <div>
             <p className="text-sm">
               This Week:{" "}
-              <span className="font-semibold">
-                {summary.commits || 0} commits
-              </span>
+              <b>{summary.commits || 0} commits</b>
             </p>
 
             <p className="text-sm mt-2">
               Status:{" "}
-              <span className="text-green-400">
+              <span className="text-green-500 font-medium">
                 {project.status || "Active"}
               </span>
             </p>
 
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-[var(--text-secondary)] mt-2">
               Est: {project.estimated_completion || "-"}
             </p>
           </div>
@@ -86,31 +84,33 @@ export default function GithubView({ candidateId, date }) {
         </div>
       </div>
 
-      {/* RECENT ACTIVITY + SUMMARY */}
+      {/* ================= ACTIVITY + SUMMARY ================= */}
       <div className="grid md:grid-cols-3 gap-6">
 
-        {/* RECENT */}
-        <div className="md:col-span-2 bg-[var(--card)] p-5 rounded-xl">
+        {/* RECENT ACTIVITY */}
+        <div className="md:col-span-2 card p-5">
 
-          <h3 className="font-semibold mb-3">Recent Activity</h3>
+          <p className="section-title">Recent Activity</p>
 
-          {activities.length === 0 ? (
-            <p className="text-gray-400 text-sm">No activity</p>
+          {activity.length === 0 ? (
+            <p className="text-sm text-[var(--text-secondary)]">
+              No activity
+            </p>
           ) : (
-            activities.map((a, i) => (
+            activity.map((a, i) => (
               <div
                 key={i}
-                className="flex justify-between items-center border-b border-gray-700 py-2"
+                className="flex justify-between items-center border-b py-2"
               >
                 <div>
                   <p className="text-sm">{a.message}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-[var(--text-secondary)]">
                     {a.date}
                   </p>
                 </div>
 
-                <button className="text-blue-400 text-xs">
-                  View
+                <button className="btn-blue text-xs">
+                  View Commit
                 </button>
               </div>
             ))
@@ -118,48 +118,48 @@ export default function GithubView({ candidateId, date }) {
         </div>
 
         {/* SUMMARY */}
-        <div className="bg-[var(--card)] p-5 rounded-xl">
+        <div className="card p-5">
 
-          <h3 className="font-semibold mb-3">This Week</h3>
+          <p className="section-title">This Week’s Summary</p>
 
           <ul className="text-sm space-y-2">
             <li>✔ {summary.commits || 0} Commits</li>
-            <li>✔ {summary.features || 0} Features</li>
-            <li>✔ {summary.bugs || 0} Bug Fixes</li>
-            <li>✔ {summary.deployments || 0} Deployments</li>
+            <li>✔ {summary.features || 0} New Features</li>
+            <li>✔ {summary.bugs || 0} Bug Fix</li>
+            <li>✔ {summary.deployments || 0} Deployment</li>
           </ul>
 
-          <p className="text-xs text-gray-400 mt-3">
+          <p className="text-xs text-[var(--text-secondary)] mt-3">
             {summary.note || ""}
           </p>
         </div>
 
       </div>
 
-      {/* COMPLETED PROJECTS */}
+      {/* ================= COMPLETED PROJECTS ================= */}
       <div>
-        <h3 className="font-semibold mb-4">Completed Projects</h3>
+
+        <p className="section-title">Completed Projects</p>
 
         <div className="grid md:grid-cols-3 gap-4">
 
           {completed.map((p, i) => (
-            <div
-              key={i}
-              className="bg-[var(--card)] p-4 rounded-xl border"
-            >
+            <div key={i} className="card p-4">
+
               <h4 className="font-semibold">{p.name}</h4>
 
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 Duration: {p.duration}
               </p>
 
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-[var(--text-secondary)]">
                 Commits: {p.commits}
               </p>
 
-              <button className="mt-3 text-blue-400 text-sm">
+              <button className="btn-blue text-xs mt-3">
                 View Repo
               </button>
+
             </div>
           ))}
 

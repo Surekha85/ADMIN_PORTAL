@@ -1,305 +1,493 @@
+"use client";
+
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { authAPI } from "../services/authAPI";
+import { useSortableData } from "../hooks/sortableData";
+import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
+import { ExternalLink, Download } from "lucide-react";
 
 export default function JobApplications() {
   const router = useRouter();
   const { candidateId } = router.query;
 
+  const today = new Date().toISOString().split("T")[0];
+  const [toast, setToast] = useState(null);
+
   const [data, setData] = useState(null);
-  const [date, setDate] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [date, setDate] = useState(today);
+  const [expandedId, setExpandedId] = useState(null);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [editJob, setEditJob] = useState(null);
 
   const [form, setForm] = useState({
     company: "",
     role: "",
-    experience: "",
     job_link: "",
     applied_via: "",
     employment_type: "",
+    experience: "",
+    application_date: today,
+    ats_score: ""
   });
-
-  useEffect(() => {
-    setDate(new Date().toISOString().split("T")[0]);
-  }, []);
-
-  // ================= FETCH =================
+  /* ================= FETCH ================= */
   const fetchData = async () => {
-    if (!candidateId || !date) return;
+    if (!candidateId) return;
 
-    setLoading(true);
-    try {
-      const res = await authAPI.getJobApplications(candidateId, date);
-      const parsed =
-        typeof res.body === "string" ? JSON.parse(res.body) : res;
+    const res = await authAPI.getJobApplications(candidateId, date);
+    const parsed =
+      typeof res.body === "string" ? JSON.parse(res.body) : res;
 
-      setData(parsed);
-    } catch (err) {
-      console.error("❌ FETCH ERROR:", err);
-    } finally {
-      setLoading(false);
-    }
+    setData(parsed);
   };
 
   useEffect(() => {
     if (!router.isReady) return;
+
     fetchData();
+
+    const stored = localStorage.getItem("selectedCandidate");
+    if (stored) setSelectedCandidate(JSON.parse(stored));
   }, [router.isReady, candidateId, date]);
 
-  // ================= WEEK =================
+  const { sortedItems } = useSortableData(data?.applications || []);
+
+  /* ================= WEEK ================= */
   const getWeekRange = (dateStr) => {
     const d = new Date(dateStr);
     const start = new Date(d);
     const day = start.getDay();
     const diff = start.getDate() - day + (day === 0 ? -6 : 1);
     start.setDate(diff);
-
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
 
     const format = (x) => x.toISOString().split("T")[0];
-
     return { start: format(start), end: format(end) };
   };
 
-  const week = date ? getWeekRange(date) : {};
-  const startDate = data?.week_start_date || week.start;
-  const endDate = data?.week_end_date || week.end;
+  const week = getWeekRange(date);
 
-  // ================= FORM =================
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const showToast = (msg, type = "error") => {
+    setToast({ msg, type });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
   };
 
-  // ✅ FIXED SUBMIT (ONLY FIXED LOGIC)
+  /* ================= SUBMIT ================= */
   const handleSubmit = async () => {
+    const experienceValue =
+      form.experience === "Other"
+        ? form.experience_other
+        : form.experience;
+
+    const payload = {
+      jaa_candidate_id: String(candidateId),
+      company_name: form.company,
+      job_title: form.role,
+      application_link: form.job_link,
+      applied_via: form.applied_via,
+      employment_type: form.employment_type || "Full-time",
+      experience: experienceValue,
+      ats_score: Number(form.ats_score)
+    };
+
     try {
-      setSubmitting(true);
+      if (editJob) {
+        // ✅ UPDATE
+        await authAPI.createJobApplication({
+          ...payload,
+          job_id: editJob.job_id   // IMPORTANT
+        });
 
-      if (!candidateId || candidateId === "undefined") {
-        alert("Candidate ID missing ❌");
-        console.error("❌ candidateId:", candidateId);
-        return;
+        showToast("Job updated successfully ✅", "success");
+
+      } else {
+        // ✅ CREATE
+        await authAPI.createJobApplication(payload);
+
+        showToast("Job Application added successfully ✅", "success");
       }
 
-      if (!form.company || !form.role || !form.job_link) {
-        alert("Please fill required fields");
-        return;
-      }
+    } catch (e) {
+      console.error("API Error:", e);
 
-      const cleanUrl = form.job_link.trim();
+      const errorMsg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "Something went wrong ❌";
 
-      if (!cleanUrl.startsWith("http")) {
-        alert("URL must start with http/https");
-        return;
-      }
-
-      const payload = {
-        jaa_candidate_id: String(candidateId), // ✅ FORCE STRING
-        company_name: form.company,
-        job_title: form.role,
-        experience: Number(form.experience) || 0,
-        application_link: cleanUrl,
-        applied_via: form.applied_via || "LinkedIn",
-        employment_type: form.employment_type || "Full-Time",
-      };
-
-      console.log("🔥 FINAL PAYLOAD:", payload); // 👈 IMPORTANT
-
-      const res = await authAPI.createJobApplication(payload);
-
-      console.log("✅ RESPONSE:", res);
-
-      alert("Job application created successfully ✅");
-
-      setShowModal(false);
-
-      setForm({
-        company: "",
-        role: "",
-        experience: "",
-        job_link: "",
-        applied_via: "",
-        employment_type: "",
-      });
-
-      fetchData();
-
-    } catch (err) {
-      console.error("❌ ERROR FULL:", err);
-      alert(err.message || "Something went wrong ❌");
-    } finally {
-      setSubmitting(false);
+      showToast(errorMsg);
     }
+
+    setShowModal(false);
+    fetchData();
+  };
+
+  /* ================= HANDLERS ================= */
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+  };
+
+  const openAddModal = () => {
+    setEditJob(null);
+
+    setForm({
+      company: "",
+      role: "",
+      job_link: "",
+      applied_via: "",
+      employment_type: "Full-time",
+      experience: "",
+      ats_score: ""
+    });
+
+    setShowModal(true);
+  };
+
+  const openEditModal = (job) => {
+    setEditJob(job);
+
+    setForm({
+      company: job.company_name || "",
+      role: job.job_title || "",
+      job_link: job.application_link || "",
+      applied_via: job.applied_via || "",
+      employment_type: job.employment_type || "Full-time",
+      experience: job.experience || "",
+      ats_score: job.ats_score || ""
+    });
+
+    setShowModal(true);
   };
 
   return (
-    <div className="min-h-screen p-6 bg-[#0f172a] text-white">
+    <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
+      {toast && (
+        <div className={`toast ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
+          {toast.msg}
+        </div>
+      )}
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
 
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-        >
-          ← Back
-        </button>
+        <div>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="mb-2 px-4 py-2 rounded-lg bg-blue-600 text-white btn-blue"
+          >
+            ← Back
+          </button>
 
-        <div className="flex gap-3 items-center">
+          <h1 className="text-2xl font-semibold">
+            {selectedCandidate?.first_name || "Candidate"} – Job Applications
+          </h1>
 
+          <p className="text-sm text-[var(--text-secondary)]">
+            {week.start} → {week.end}
+          </p>
+        </div>
+
+        <div className="flex gap-3">
           <input
             type="date"
             value={date}
+            max={today}
             onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 bg-[#1e293b] border border-gray-600 rounded"
+            className="px-3 py-2 rounded-lg bg-[var(--card)] border"
           />
 
           <button
-            onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-green-600 rounded hover:bg-green-700"
+            onClick={openAddModal}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white btn-blue"
           >
-            + Add Job Application
+            + Add Job Applications
           </button>
-
         </div>
       </div>
 
-      {/* TITLE */}
-      <h1 className="text-2xl font-semibold mb-6">
-        Job Applications ({startDate} → {endDate})
-      </h1>
-
-      {loading && <p className="text-gray-400">Loading...</p>}
-
       {/* EMPTY */}
-      {!loading && data?.applications?.length === 0 && (
-        <h2 className="text-center text-2xl mt-20 text-gray-500">
-          NO APPLICATIONS FOUND
-        </h2>
-      )}
-
-      {/* ✅ TABLE (UNCHANGED AS YOU REQUESTED) */}
-      {data?.applications?.length > 0 && (
-        <div className="overflow-x-auto">
-          <table className="w-full border border-gray-700 rounded-lg text-sm">
-
-            <thead className="bg-[#1e293b]">
-              <tr>
-                <th className="p-3 text-left">Job</th>
-                <th className="p-3 text-left">Company</th>
-                <th className="p-3 text-left">Date</th>
-                <th className="p-3 text-left">Type</th>
-                <th className="p-3 text-left">Exp</th>
-                <th className="p-3 text-left">Via</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">ATS</th>
-                <th className="p-3 text-left">Resume</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {data.applications.map((j, i) => (
-                <tr key={i} className="border-t border-gray-700 hover:bg-[#1e293b]">
-                  <td className="p-3 font-medium">{j.job_title}</td>
-                  <td className="p-3">{j.company_name}</td>
-                  <td className="p-3">{j.application_date}</td>
-                  <td className="p-3">{j.employment_type}</td>
-                  <td className="p-3">{j.experience}</td>
-                  <td className="p-3">{j.applied_via}</td>
-
-                  <td className="p-3">
-                    <span className="px-2 py-1 text-xs rounded bg-yellow-600">
-                      {j.approval_status}
-                    </span>
-                  </td>
-
-                  <td className="p-3">{j.ats_score}</td>
-
-                  <td className="p-3">
-                    {j.resume_s3_url ? (
-                      <a href={j.resume_s3_url} target="_blank" className="text-blue-400 underline">
-                        View
-                      </a>
-                    ) : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-
-          </table>
+      {sortedItems.length === 0 && (
+        <div className="empty-box">
+          <p className="text-lg font-medium">No Applications Found</p>
         </div>
       )}
 
+      {/* LIST */}
+      <div className="space-y-4">
+
+        {sortedItems.map((j, i) => {
+          const isExpanded = expandedId === i;
+
+          return (
+            <div
+              key={i}
+              className="p-5 rounded-2xl bg-[var(--card)] card-hover"
+            >
+
+              {/* TOP */}
+              <div className="flex justify-between items-center">
+
+                <div>
+                  <p className="font-semibold text-lg">{j.job_title}</p>
+                  <p className="text-sm text-gray-400">
+                    {j.company_name}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+
+                  <span className="text-green-400 text-sm">
+                    Application Date:  {j.application_date}
+                  </span>
+
+                  <span className="px-3 py-1 rounded-full text-xs bg-yellow-400/20 text-yellow-300">
+                    {j.approval_status || "Pending"}
+                  </span>
+
+                  {/* EXPAND */}
+                  <button
+                    onClick={() => toggleExpand(i)}
+                    className="p-2 rounded-md hover:bg-[var(--bg-secondary)]"
+                  >
+                    {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                  </button>
+
+                  {/* EDIT */}
+                  <button
+                    onClick={() => openEditModal(j)}
+                    className="p-2 rounded-md hover:bg-[var(--bg-secondary)]"
+                  >
+                    <Pencil size={16} />
+                  </button>
+
+                </div>
+              </div>
+
+              {/* EXPANDED */}
+              {isExpanded && (
+                <div className="mt-4 grid grid-cols-2 gap-4 text-sm border-t pt-4 animate-fade-in">
+
+                  <div>
+                    <p className="text-gray-400">Applied Via</p>
+                    <p>{j.applied_via}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Employment</p>
+                    <p>{j.employment_type}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Experience</p>
+                    <p>{j.experience}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">ATS Score</p>
+                    <p>{j.ats_score}</p>
+                  </div>
+
+                  <div className="col-span-2 flex gap-3 mt-3">
+
+                    <button
+                      onClick={() =>
+                        window.open(j.application_link, "_blank")
+                      }
+                      className="px-4 py-2 rounded text-white btn-blue flex items-center gap-2"
+                    >
+                      <ExternalLink size={16} />
+                      View Application
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        window.open(j.resume_s3_url, "_blank")
+                      }
+                      className="px-4 py-2 rounded text-white btn-green flex items-center gap-2"
+                    >
+                      <Download size={16} />
+                      Download Resume
+                    </button>
+
+                  </div>
+
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/60">
-
-          <div className="w-full max-w-2xl bg-[#1e293b] rounded-2xl p-6">
-
-            <div className="flex justify-between mb-6">
-              <h2 className="text-xl">Add Job Application</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--card)] w-full max-w-2xl rounded-2xl p-6 shadow-xl animate-fade-in relative">
+            <div className="p-6 border-b border-gray-700 flex justify-between">
+              <h2 className="text-xl">{editJob ? "Edit Job Application" : "Add Job Application"}</h2>
               <button onClick={() => setShowModal(false)}>✕</button>
             </div>
 
+            {/* FORM */}
             <div className="grid grid-cols-2 gap-4">
 
-              <Input label="Company" name="company" onChange={handleChange} />
-              <Input label="Role" name="role" onChange={handleChange} />
-              <Input label="Experience" name="experience" onChange={handleChange} />
+              {/* COMPANY */}
+              <div>
+                <label className="text-sm">
+                  Company <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.company}
+                  onChange={(e) => setForm({ ...form, company: e.target.value })}
+                  className="input"
+                />
+              </div>
 
-              <Select label="Type" name="employment_type" onChange={handleChange}
-                options={["Full-Time", "Part-Time", "Internship"]} />
+              {/* ROLE */}
+              <div>
+                <label className="text-sm">
+                  Job Role <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  className="input"
+                />
+              </div>
 
-              <Select label="Applied Via" name="applied_via" onChange={handleChange}
-                options={["LinkedIn", "Indeed", "Referral"]} />
+              {/* APPLIED VIA */}
+              <div>
+                <label className="text-sm">
+                  Applied Via <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.applied_via}
+                  onChange={(e) => setForm({ ...form, applied_via: e.target.value })}
+                  className="input"
+                />
+              </div>
 
+              {/* EMPLOYMENT TYPE */}
+              <div>
+                <label className="text-sm">
+                  Employment Type <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.employment_type || "Full-time"}
+                  onChange={(e) =>
+                    setForm({ ...form, employment_type: e.target.value })
+                  }
+                  className="input"
+                />
+              </div>
+
+              {/* EXPERIENCE */}
+              <div>
+                <label className="text-sm">
+                  Experience <span className="text-red-500">*</span>
+                </label>
+
+                {form.experience !== "Other" ? (
+                  <select
+                    value={form.experience}
+                    onChange={(e) =>
+                      setForm({ ...form, experience: e.target.value })
+                    }
+                    className="input"
+                  >
+                    <option value="">Select</option>
+                    <option>0-1</option>
+                    <option>1-2</option>
+                    <option>2-3</option>
+                    <option>3-4</option>
+                    <option>4-5</option>
+                    <option>Other</option>
+                  </select>
+                ) : (
+                  <input
+                    placeholder="Enter experience"
+                    value={form.experience_other || ""}
+                    onChange={(e) =>
+                      setForm({ ...form, experience_other: e.target.value })
+                    }
+                    className="input"
+                  />
+                )}
+              </div>
+
+              {/* ATS */}
+              <div>
+                <label className="text-sm">
+                  ATS Score (%) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={form.ats_score}
+                  onChange={(e) =>
+                    setForm({ ...form, ats_score: e.target.value })
+                  }
+                  className="input"
+                />
+              </div>
+
+              {/* LINK */}
               <div className="col-span-2">
-                <Input label="Job Link" name="job_link" onChange={handleChange} />
+                <label className="text-sm">
+                  Job Link <span className="text-red-500">*</span>
+                </label>
+                <input
+                  value={form.job_link}
+                  onChange={(e) => setForm({ ...form, job_link: e.target.value })}
+                  className="input"
+                />
               </div>
 
             </div>
 
+            {/* ACTIONS */}
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="border px-4 py-2 rounded">
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded bg-gray-500 text-white"
+              >
                 Cancel
               </button>
 
-              <button onClick={handleSubmit} className="bg-green-600 px-4 py-2 rounded">
-                {submitting ? "Saving..." : "Submit"}
-              </button>
-            </div>
+              <button
+                onClick={() => {
+                  if (
+                    !form.company ||
+                    !form.role ||
+                    !form.job_link ||
+                    !form.applied_via ||
+                    !form.employment_type ||
+                    !(form.experience === "Other"
+                      ? form.experience_other
+                      : form.experience) ||
+                    !form.ats_score
+                  ) {
+                    showToast("Please fill all mandatory fields ⚠️");
+                    return;
+                  }
 
+                  handleSubmit();
+                }}
+                className="px-4 py-2 rounded bg-blue-600 text-white"
+              >
+                {editJob ? "Update" : "Submit"}
+              </button>
+
+            </div>
           </div>
         </div>
       )}
-
-    </div>
-  );
-}
-
-/* INPUT */
-function Input({ label, ...props }) {
-  return (
-    <div>
-      <label className="text-sm">{label}</label>
-      <input {...props} className="w-full p-2 mt-1 bg-[#0f172a] border rounded" />
-    </div>
-  );
-}
-
-/* SELECT */
-function Select({ label, options = [], ...props }) {
-  return (
-    <div>
-      <label className="text-sm">{label}</label>
-      <select {...props} className="w-full p-2 mt-1 bg-[#0f172a] border rounded">
-        <option value="">Select</option>
-        {options.map((o) => <option key={o}>{o}</option>)}
-      </select>
     </div>
   );
 }

@@ -236,177 +236,110 @@ thead .sticky-name {
   flex: 1;
   overflow: auto;
 }
-/* =========================
-   TABLE FINAL (NO STICKY COLS)
-========================= */
 
-.table-wrapper {
+
+/* Stable hover (NO movement) */
+.card-hover {
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+}
+
+.card-hover:hover {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+  border-color: var(--primary);
+}
+
+/* Remove movement completely */
+.card-hover:active {
+  transform: none;
+}
+
+.card-hover {
+  transition: all 0.25s ease;
+  border: 1px solid var(--border);
+}
+
+.card-hover:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  border-color: #3b82f6;
+}
+
+.card-hover:active {
+  transform: scale(0.98);
+}
+
+/* Buttons */
+.btn-blue {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+.btn-green {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.btn-blue:hover,
+.btn-green:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+/* Empty state */
+.empty-box {
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+  outline: none;
 }
 
-.table-scroll {
-  flex: 1;
-  overflow: auto;
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.4);
 }
 
-/* Table */
-.custom-table {
-  width: max-content;
-  min-width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+/* ===== TOAST BASE ===== */
+.toast {
+  position: fixed;
+  bottom: 3%;
+  right: 3%;
+  z-index: 9999;
+  padding: 10px;
+  border-radius: 8px;
+  height: 5%;
+  width: 30%;
+  color: #fff;
+  font-size: 20px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  animation: slideIn 0.3s ease;
 }
 
-/* HEADER (ONLY STICKY PART) */
-.custom-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+/* ===== TYPES ===== */
+.toast-success {
+  background-color: #16a34a;
 }
 
-.custom-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #0f172a;
-  border-bottom: 2px solid #334155;
-  border-right: 1px solid #334155;
+.toast-error {
+  background-color: #ef4444;
 }
 
-/* CELLS */
-.custom-table th,
-.custom-table td {
-  padding: 12px 16px;
-  white-space: nowrap;
-  border-right: 1px solid #334155;
-  border-bottom: 1px solid #334155;
-}
-
-/* Widths */
-.col-sno { width: 80px; min-width: 80px; }
-.col-name { width: 200px; min-width: 200px; }
-.col-email { width: 260px; min-width: 260px; }
-.col-small { width: 150px; min-width: 150px; }
-
-/* Hover */
-.custom-table tbody tr:hover {
-  background: #1e293b;
-}
-
-/* Scrollbar */
-.table-scroll::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-.table-scroll::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 10px;
-}
-/* =========================
-   HEADER (STICKY FIX)
-========================= */
-
-.custom-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 50; /* HIGH */
-  background: #0f172a;
-  border-bottom: 2px solid #334155;
-  border-right: 1px solid #334155;
-}
-
-/* =========================
-   CELLS
-========================= */
-
-.custom-table th,
-.custom-table td {
-  padding: 12px 16px;
-  white-space: nowrap;
-  border-right: 1px solid #334155;
-  border-bottom: 1px solid #334155;
-}
-
-/* Fix last column */
-.custom-table th:last-child,
-.custom-table td:last-child {
-  border-right: none;
-}
-
-/* =========================
-   ROW HOVER
-========================= */
-
-.custom-table tbody tr:hover {
-  background: #1e293b;
-}
-
-/* =========================
-   STICKY COLUMNS (PERFECT FIX)
-========================= */
-
-/* SNO */
-.sticky-col-1 {
-  position: sticky;
-  left: 0;
-  z-index: 40;
-  background: #1e293b;
-  border-right: 1px solid #334155;
-}
-
-/* FIRST NAME */
-.sticky-col-2 {
-  position: sticky;
-  left: 80px;
-  z-index: 40;
-  background: #1e293b;
-  border-right: 1px solid #334155;
-}
-
-/* HEADER sticky columns (higher layer) */
-thead .sticky-col-1,
-thead .sticky-col-2 {
-  z-index: 60;
-  background: #0f172a;
-}
-
-/* =========================
-   COLUMN WIDTHS (STRICT)
-========================= */
-
-.col-sno {
-  width: 80px;
-  min-width: 80px;
-}
-
-.col-name {
-  width: 180px;
-  min-width: 180px;
-}
-
-.col-email {
-  width: 260px;
-  min-width: 260px;
-}
-
-.col-small {
-  width: 140px;
-  min-width: 140px;
-}
-
-/* =========================
-   SCROLLBAR
-========================= */
-
-.table-container::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
-}
-
-.table-container::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 10px;
+/* ===== ANIMATION ===== */
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

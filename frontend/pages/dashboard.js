@@ -104,28 +104,21 @@ function Candidates() {
       try {
         let res = await authAPI.getCandidates();
 
-        console.log("RAW:", res);
-
-        // Handle API Gateway body
         if (res?.body && typeof res.body === "string") {
           res = JSON.parse(res.body);
         }
 
         let list = [];
 
-        // 🔥 MAIN FIX
         if (typeof res?.candidates === "string") {
           list = JSON.parse(res.candidates);
-        } 
-        else if (Array.isArray(res?.candidates)) {
+        } else if (Array.isArray(res?.candidates)) {
           list = res.candidates;
-        } 
-        else if (Array.isArray(res)) {
+        } else if (Array.isArray(res)) {
           list = res;
         }
 
         setData(list);
-
       } catch (err) {
         console.error("ERROR:", err);
         setData([]);
@@ -135,55 +128,126 @@ function Candidates() {
     fetchData();
   }, []);
 
-  if (!data.length) return <p>No candidates found</p>;
-
   return (
-    <div className="h-full flex flex-col">
-      <h1 className="text-xl font-semibold mb-4">Candidates</h1>
+    <div className="h-full flex flex-col p-4">
 
-      <div className="table-wrapper flex-1 bg-[#1e293b] rounded-xl border border-gray-700">
-        <div className="table-scroll">
-          <table className="custom-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Location</th>
-                <th>Experience</th>
-                <th>Job Type</th>
-                <th>Assistant</th>
-                <th>Created</th>
-              </tr>
-            </thead>
+      {/* HEADER */}
+      <h1 className="text-2xl font-semibold mb-6">Candidates</h1>
 
-            <tbody>
-              {data.map((c, i) => (
-                <tr key={i}>
-                  <td>{i + 1}</td>
-
-                  <td
-                    style={{ color: "#38bdf8", cursor: "pointer", textDecoration: "underline" }}
-                    onDoubleClick={() =>
-                      router.push(`/candidate_details?id=${c.jaa_candidate_id}`)
-                    }
-                  >
-                    {c.first_name} {c.last_name}
-                  </td>
-
-                  <td>{c.email}</td>
-                  <td>{c.address?.city}, {c.address?.state}</td>
-                  <td>{c.careerDetails?.yearsExperience} yrs</td>
-                  <td>{c.careerDetails?.preferredJobType}</td>
-                  <td>{c.assistantAssignedTo || "N/A"}</td>
-                  <td>{new Date(c.createdAt).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-
-          </table>
+      {/* EMPTY */}
+      {data.length === 0 ? (
+        <div className="flex flex-col items-center justify-center mt-20 text-gray-400">
+          <div className="text-5xl mb-4">📭</div>
+          <p>No candidates found</p>
         </div>
-      </div>
+      ) : (
+
+        <div className="space-y-5  overflow-y-auto">
+          <h3>Total Candidates: {data.length}</h3>
+
+          {data.map((c, i) => (
+            <div
+              key={i}
+              className="group relative rounded-3xl p-[1px] bg-gradient-to-r from-blue-500/20 via-purple-500/10 to-transparent hover:from-blue-500/50 transition-all duration-300"
+            >
+              <div
+                className="card-hover bg-[#020617]/90 backdrop-blur-xl rounded-3xl p-4 flex justify-between items-center cursor-pointer"
+                onDoubleClick={() =>
+                  router.push(`/candidate_details?id=${c.jaa_candidate_id}`)
+                }
+              >
+
+                {/* LEFT */}
+                <div className="flex items-center gap-4">
+
+                  {/* AVATAR */}
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg shadow">
+                    {c.first_name?.[0]}
+                  </div>
+
+                  {/* INFO */}
+                  <div>
+                    <h2 className="text-lg font-semibold group-hover:text-blue-400 transition">
+                      {c.first_name} {c.last_name}
+                    </h2>
+
+                    <p className="text-sm text-gray-400">
+                      {c.email}
+                    </p>
+
+                    <div className="flex gap-3 mt-1 text-xs text-gray-500">
+                      <span>{c.address?.city}, {c.address?.state}</span>
+                      <span>•</span>
+                      <span>{c.address?.country}</span>
+                    </div>
+
+                    {/* SKILLS */}
+                    <div className="mt-2">
+                      {Array.isArray(c.skills) && c.skills.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {c.skills.slice(0, 4).map((skill, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-1 text-[10px] rounded-full bg-blue-500/10 text-blue-400"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                          {c.skills.length > 4 && (
+                            <span className="text-[10px] text-gray-500">
+                              +{c.skills.length - 4}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-500">No skills</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT */}
+                <div className="flex items-center gap-8">
+
+                  {/* METRICS */}
+                  <div className="hidden md:flex gap-8 text-xs text-gray-400">
+
+                    <div>
+                      <p className="text-gray-500">Experience</p>
+                      <p className="font-medium text-white">
+                        {c.careerDetails?.yearsExperience} yrs
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-500">Assign Assistant</p>
+                      <p className="font-medium text-white">
+                        {c.assistantAssignedTo || "N/A"}
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* ACTIONS */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/candidate_details?id=${c.jaa_candidate_id}`);
+                      }}
+                      className="px-3 py-1 text-xs rounded-lg btn-blue text-white"
+                    >
+                      View
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          ))}
+
+        </div>
+      )}
     </div>
   );
 }
