@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { logout, getCurrentUser } from "../../../ASSISTANTS_PORTAL/frontend/utils/auth";
+import { logout, getCurrentUser } from "../utils/auth";
 
 // ✅ Icons
 import {
@@ -19,6 +19,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const closeDropdown = () => setOpen(false);
 
   useEffect(() => {
     setMounted(true);
@@ -60,8 +61,8 @@ export default function Navbar() {
   if (!mounted) return null;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#0f172a] border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full bg-[#0f172a] border-b border-slate-800" id="app-navbar">
+      <div className="w-full px-6 py-4 flex items-center">
 
         {/* LOGO */}
         <div className="flex items-center gap-3">
@@ -78,7 +79,7 @@ export default function Navbar() {
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-4 text-white relative">
+        <div className="ml-auto flex items-center gap-4 text-white relative shrink-0">
 
           {/* PROFILE */}
           <div ref={dropdownRef} className="relative">
@@ -129,6 +130,7 @@ export default function Navbar() {
                   {/* Dashboard */}
                   <Link
                     href="/dashboard"
+                    onClick={closeDropdown}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700"
                   >
                     <LayoutDashboard size={18} />
@@ -141,6 +143,7 @@ export default function Navbar() {
                   {/* Profile */}
                   <Link
                     href="/profile"
+                    onClick={closeDropdown}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700"
                   >
                     <User size={18} />
@@ -152,7 +155,10 @@ export default function Navbar() {
 
                   {/* Theme */}
                   <button
-                    onClick={handleThemeToggle}
+                    onClick={() => {
+                      handleThemeToggle();
+                      closeDropdown();
+                    }}
                     className="w-full text-left flex items-center gap-3 px-4 py-2 hover:bg-gray-100 dark:hover:bg-slate-700"
                   >
                     <Moon size={18} />
