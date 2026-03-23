@@ -107,99 +107,93 @@ export default function CandidatesPage() {
 
         <div className="space-y-3">
 
-          {candidates.map((c) => (
+          {candidates.map((a) => (
             <div
-              key={c.jaa_candidate_id}
-              onClick={() => setSelectedCandidate(c)}
-              className="
-                relative
-                px-4 py-2 pt-4 
-                rounded-2xl cursor-pointer transition-all duration-200
-                border border-transparent card-hover
-                bg-[var(--card)]
-              "
-            >
+                key={a.candidateId}
+                onClick={() => setSelectedAssistant(a)}
+                className={`
+                  p-5 rounded-2xl cursor-pointer transition-all duration-200
+                  border border-transparent card-hover
+                  bg-[var(--card)]
+                `}
+              >
+                <div className="grid grid-cols-[1fr_120px_180px] items-center">
 
-              {/* ✅ LAST LOGIN (TOP RIGHT) */}
-              <div className="absolute top-3 right-4 flex items-center gap-2 text-xs">
-                <span className="text-gray-400">Last Login:</span>
+                  {/* LEFT */}
+                  <div className="flex gap-4 items-center">
 
-                <span className="
-                  px-2.5 py-0.5 rounded-full 
-                  bg-gray-700/50 
-                  text-gray-200 font-medium
-                ">
-                  {c?.last_login
-                    ? new Date(c.last_login).toLocaleString("en-IN", {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                      })
-                    : "Never"}
-                </span>
-              </div>
+                    {/* Avatar */}
+                    <div className="
+                      w-12 h-12 rounded-xl
+                      flex items-center justify-center
+                      font-bold text-lg text-white
+                      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
+                    ">
+                      {a.first_name?.[0]}
+                    </div>
 
-              <div className="flex items-start">
+                    {/* Info */}
+                    <div>
+                      <p className="font-semibold">
+                        {a.first_name} {a.last_name}
+                      </p>
 
-                {/* LEFT */}
-                <div className="flex gap-4">
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        {a.email}
+                      </p>
 
-                  {/* Avatar */}
-                  <div className="
-                    w-11 h-11 rounded-xl
-                    flex items-center justify-center
-                    font-bold text-sm text-white
-                    bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
-                  ">
-                    {c.first_name?.[0]}
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        ID: {a.candidateId}
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Info */}
-                  <div>
-                    <p className="font-semibold">
-                      {c.first_name} {c.last_name}
-                    </p>
+                  {/* MIDDLE */}
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      Assgined Candidates
+                    </span>
 
-                    <p className="text-xs text-[var(--text-secondary)]">
-                      {c.email}
-                    </p>
+                    <span className="text-2xl font-bold text-[var(--primary)]">
+                      {a.assigned_candidates?.length || 0}
+                    </span>
+                  </div>
 
-                    {/* Address + Location */}
-                    <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                      <span>
-                        {c?.address?.city} • {c?.address?.state}
+                  {/* RIGHT */}
+                  <div className="flex flex-col items-end gap-2">
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-[var(--text-secondary)]">
+                        Last Login:
                       </span>
 
-                      {c?.address?.country && (
-                        <span className="flex items-center gap-1 text-[var(--text-secondary)]">
-                          <MapPin size={12} className="text-[var(--primary)]" />
-                          {c.address.country}
+                      {a.last_login ? (
+                        <span className="text-[var(--text)] font-medium">
+                          {new Date(a.last_login).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--border)] text-[var(--text-secondary)]">
+                          Never
                         </span>
                       )}
                     </div>
 
-                    <p className="text-xs text-[var(--text-secondary)]">
-                      📞 {c.phone}
-                    </p>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* ACTION */}
-              <div className="mt-3 text-right">
-                <button
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        goToDetails(c);
+                        goToDetails(e);
+                        
                       }}
                       className="text-sm text-[var(--primary)] hover:underline"
                     >
                       View Details
                     </button>
-              </div>
 
-            </div>
+                  </div>
+
+                </div>
+
+              </div>
           ))}
 
         </div>
