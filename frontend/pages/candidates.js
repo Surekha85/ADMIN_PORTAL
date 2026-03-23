@@ -67,11 +67,11 @@ export default function CandidatesPage() {
   // UI
   //////////////////////////////////////////////////////
   return (
-    <div className="min-h-screen bg-[#0B1120] text-white p-8">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] text-white p-8">
 
       {/* HEADER */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold">
+        <h1 className="text-2xl text-[var(--text)] font-semibold">
           Candidates ({candidates.length})
         </h1>
         <p className="text-sm text-gray-400">
@@ -108,12 +108,11 @@ export default function CandidatesPage() {
               <div
                 key={c.jaa_candidate_id}
                 onClick={() => setSelectedCandidate(c)}
-                className={`p-5 rounded-2xl cursor-pointer transition
-                ${
-                  isActive
-                    ? "bg-blue-700 text-white"
-                    : "bg-[#111827] hover:bg-gray-800"
-                }`}
+                className={`
+                  p-5 rounded-2xl cursor-pointer transition-all duration-200
+                  border border-transparent
+                  bg-[var(--card)] card-hover
+                `}
               >
                 <div className="flex justify-between items-center">
 
@@ -121,7 +120,7 @@ export default function CandidatesPage() {
                   <div className="flex gap-4">
 
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-lg">
                       {c.first_name?.[0]}
                     </div>
 
@@ -130,13 +129,13 @@ export default function CandidatesPage() {
                       <p className="font-semibold">
                         {c.first_name} {c.last_name}
                       </p>
-                      <p className="text-sm opacity-80">{c.email}</p>
+                      <p className="text-sm text-gray-400">{c.email}</p>
 
-                      <p className="text-xs opacity-70">
+                      <p className="text-xs text-gray-500">
                         {c?.address?.city} • {c?.address?.state}
                       </p>
 
-                      <p className="text-xs opacity-70">
+                      <p className="text-xs text-gray-500">
                         📞 {c.phone}
                       </p>
                     </div>
@@ -145,7 +144,7 @@ export default function CandidatesPage() {
 
                   {/* RIGHT */}
                   {c?.address?.country && (
-                    <div className="flex items-center gap-2 text-sm opacity-80">
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
                       <MapPin size={16} />
                       <span>{c.address.country}</span>
                     </div>
@@ -154,18 +153,22 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* ACTION */}
-                <div className="mt-3 text-right">
+                <div className="mt-4 text-right">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       goToDetails(c);
                     }}
-                    className="px-4 py-1 text-sm bg-blue-600 rounded-lg hover:bg-blue-700"
-                  >
+                    className="
+                      px-4 py-1.5 text-sm rounded-lg
+                      bg-[#6366f1]/20 text-[#6366f1]
+                      hover:bg-[#6366f1]/30
+                      transition
+                    "
+                                >
                     View Details
                   </button>
                 </div>
-
               </div>
             );
           })}
