@@ -18,33 +18,36 @@ html, body {
 /* ===================
    Light Theme
 =================== */
-.light {
-  background-color: #ffffff;
-  color: #000000;
-  --bg: #ffffff;
-  --card: #f8fafc;
+:root {
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --border: #e6e8ef;
 
-  --text: #0f172a;
-  --text-secondary: #475569;
+  --text: #1f2937;
+  --text-secondary: #6b7280;
 
-  --border: #e2e8f0;
-  --primary: #4f46e5;
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+
+  --chip-bg: #eef2ff;
+  --success-bg: #dcfce7;
+  --success-text: #16a34a;
 }
 
-/* ===================
-   Dark Theme
-=================== */
 .dark {
-  background-color: #0f172a;
-  color: #ffffff;
-   --bg: #020617;
-  --card: #0f172a;
+  --bg: #0b1120;
+  --card: #111827;
+  --border: #1f2937;
 
   --text: #e5e7eb;
-  --text-secondary: #94a3b8;
+  --text-secondary: #9ca3af;
 
-  --border: #1e293b;
-  --primary: #6366f1;
+  --primary: #818cf8;
+  --primary-light: #a5b4fc;
+
+  --chip-bg: #1e293b;
+  --success-bg: #14532d;
+  --success-text: #4ade80;
 }
 
 /* ===================

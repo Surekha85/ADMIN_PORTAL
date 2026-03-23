@@ -42,11 +42,11 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex bg-[#f5f7fb] min-h-screen">
+    <div className="flex bg-[var(--bg)] text-[var(--text)] min-h-screen">
 
       {/* SIDEBAR */}
       <aside className="
-        w-64 bg-white p-4
+        w-64 bg-[var(--bg)] text-[var(--text)] p-4
         border-r border-gray-200
         flex flex-col justify-between
         rounded-r-2xl shadow-sm
@@ -85,10 +85,10 @@ export default function AdminDashboard() {
 
         {/* HEADER */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800">
+          <h1 className="text-2xl font-semibold text-[var(--text)]">
             Dashboard
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--text-secondary)]">
             Overview of platform activity
           </p>
         </div>
@@ -113,8 +113,8 @@ function Menu({ title, icon, onClick, active }) {
         transition-all duration-200
 
         ${active
-          ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-600 font-medium shadow-sm"
-          : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+          ? "bg-[var(--chip-bg)] text-[var(--primary)] font-medium shadow-sm"
+          : "text-[var(--text-secondary)] hover:bg-[var(--border)] hover:text-[var(--text)]"
         }
       `}
     >
@@ -140,15 +140,15 @@ function DashboardOverview({ candidates, assistants }) {
             ? "No candidates yet"
             : "Active users in platform"
         }
-        extra="Active"
+        extra="Active Candidates"
       />
 
       <Card
         title="Total Assistants"
         value={assistants.length}
-        icon={<UserCog size={20} />}
+        icon={<Users size={20} />}
         subtitle="Mentors / Assistants"
-        extra="Working"
+        extra="Active Assistants"
       />
 
     </div>
@@ -161,12 +161,11 @@ function DashboardOverview({ candidates, assistants }) {
 function Card({ title, value, icon, subtitle, extra }) {
   return (
     <div className="
-      bg-white border border-gray-200
+      bg-[var(--card)] border-[var(--border)]
       p-6 rounded-2xl
-      min-h-[170px]
+      min-h-[180px]
       flex flex-col justify-between
-      shadow-sm hover:shadow-md
-      transition-all duration-300
+       card-hover
     ">
 
       {/* Top */}
@@ -187,8 +186,8 @@ function Card({ title, value, icon, subtitle, extra }) {
 
       {/* Middle */}
       <div className="mt-4">
-        <p className="text-sm text-gray-500">{title}</p>
-        <h2 className="text-4xl font-bold mt-1 text-gray-800">
+        <p className="text-sm text-[var(--text-secondary)]">{title}</p>
+        <h2 className="text-4xl font-bold mt-1 text-[var(--text)]">
           {value}
         </h2>
       </div>
