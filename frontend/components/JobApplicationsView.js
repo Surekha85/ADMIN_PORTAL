@@ -42,6 +42,30 @@ export default function JobApplicationsView({ candidateId }) {
       showToast("Failed to load applications ❌");
     }
   };
+   /* ================= WEEK ================= */
+  const getWeekRange = (dateStr) => {
+    const d = new Date(dateStr);
+    const start = new Date(d);
+    const day = start.getDay();
+    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
+    start.setDate(diff);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+
+    const format = (x) => x.toISOString().split("T")[0];
+    return { start: format(start), end: format(end) };
+  };
+
+  const week = getWeekRange(date);
+
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    setDate(selectedDate);
+
+    if (candidateId) {
+      fetchLinkedinTasks(selectedDate); // 🔥 call API
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -111,13 +135,13 @@ export default function JobApplicationsView({ candidateId }) {
       <div className="flex justify-between items-center mb-6">
 
         <div>
-          <h1 className="text-2xl font-semibold">
-            Job Applications
-          </h1>
-          <p className="text-sm text-gray-400">
-            Candidate ID: {candidateId}
-          </p>
-        </div>
+            <h1 className="text-2xl font-semibold">
+              Job Applications of {candidateId}
+            </h1>
+            <p className="text-sm text-gray-400">
+              {week.start} → {week.end}
+            </p>
+          </div>
 
         <input
           type="date"
@@ -129,9 +153,24 @@ export default function JobApplicationsView({ candidateId }) {
       </div>
 
       {/* EMPTY */}
+      {/* EMPTY STATE (PRO UI) */}
       {sortedItems.length === 0 && (
-        <div className="text-center text-gray-400">
-          No Applications Found
+        <div className="flex flex-col items-center justify-center mt-24">
+
+          {/* ICON */}
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6 animate-float">
+            <span className="text-3xl">📭</span>
+          </div>
+
+          {/* TITLE */}
+          <h2 className="text-2xl font-semibold mb-2">
+            No Job Applications Found
+          </h2>
+
+          {/* SUBTEXT */}
+          <p className="text-gray-400 text-sm max-w-md text-center">
+            There are no applications scheduled for this selected date or week.
+          </p>
         </div>
       )}
 

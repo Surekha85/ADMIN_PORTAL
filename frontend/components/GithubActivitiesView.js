@@ -247,7 +247,7 @@ export default function GithubActivitiesView({ candidateId }) {
           <div className="grid grid-cols-3 gap-6">
 
             <div
-              className={`col-span-2 h-[30vh] p-5 rounded-xl border bg-white dark:bg-[#1e293b] border-gray-200 dark:border-slate-700 flex flex-col overflow-y-auto`}>
+              className={`col-span-2 h-[32vh] p-5 rounded-xl border bg-white dark:bg-[#1e293b] border-gray-200 dark:border-slate-700 flex flex-col overflow-y-auto`}>
               <h3 className="mb-4 font-semibold">Recent Activity</h3>
 
               {selectedProject?.commits?.length === 0 ? (
@@ -280,7 +280,7 @@ export default function GithubActivitiesView({ candidateId }) {
               )}
             </div>
 
-           <div className="p-5 h-[30vh] rounded-xl border bg-white dark:bg-[#1e293b] border-gray-200 dark:border-slate-700">
+           <div className="p-5 h-[32vh] rounded-xl border bg-white dark:bg-[#1e293b] border-gray-200 dark:border-slate-700">
 
               <h3 className="mb-4 font-semibold text-lg">Project Summary</h3>
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserCog } from "lucide-react";
 import { authAPI } from "../services/authAPI";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AssistantsPage() {
   const router = useRouter();
@@ -72,7 +72,7 @@ export default function AssistantsPage() {
 
       toast.success("Assistant created", { id: "create" });
 
-      // ✅ REFRESH DATA (IMPORTANT)
+      // refresh
       let res = await authAPI.getAssistants();
 
       if (res?.body) res = JSON.parse(res.body);
@@ -88,7 +88,6 @@ export default function AssistantsPage() {
       setAssistants(parsed);
       setSelectedAssistant(parsed[0] || null);
 
-      // reset
       setShowModal(false);
       setForm({
         first_name: "",
@@ -98,8 +97,11 @@ export default function AssistantsPage() {
       });
 
     } catch (err) {
+      console.error("Create Assistant Error:", err);
+
+      // ✅ CLEAN ERROR MESSAGE
       toast.error(err.message || "Error creating assistant", {
-        id: "create"
+        id: "create",
       });
     }
   };
@@ -123,25 +125,35 @@ export default function AssistantsPage() {
 
       {/* HEADER */}
       <div className="mb-6 flex justify-between items-center">
-        <div>
+
+        {/* LEFT: Back + Title */}
+        <div className="flex items-center gap-3">
+
+          <button
+            onClick={() => router.back()}
+            className="px-3 py-1.5 rounded-lg text-white btn-blue"
+          >
+            ← Back
+          </button>
+
           <h1 className="text-2xl font-semibold">
-            Assistants ({assistants.length})
+            Assistants
           </h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Manage all assistants
-          </p>
+
         </div>
 
+        {/* RIGHT: Create Button */}
         <button
           onClick={() => setShowModal(true)}
           className="
-            px-4 py-2 rounded-lg
-            bg-[var(--primary)]/20 text-[var(--primary)]
-            hover:bg-[var(--primary)]/30
-          "
+      px-4 py-2 rounded-lg
+      bg-[var(--primary)]/20 text-[var(--primary)]
+      hover:bg-[var(--primary)]/30
+    "
         >
           + Create Assistant
         </button>
+
       </div>
 
       {/* EMPTY */}
@@ -190,11 +202,11 @@ export default function AssistantsPage() {
 
                     {/* Avatar */}
                     <div className="
-      w-12 h-12 rounded-xl
-      flex items-center justify-center
-      font-bold text-lg text-white
-      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
-    ">
+                      w-12 h-12 rounded-xl
+                      flex items-center justify-center
+                      font-bold text-lg text-white
+                      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
+                    ">
                       {a.first_name?.[0]}
                     </div>
 
@@ -339,29 +351,47 @@ export default function AssistantsPage() {
   );
 }
 
+export function Input({ label, name, value, onChange, type = "text" }) {
+  const [show, setShow] = useState(false);
 
+  const isPassword = type === "password";
 
-function Input({ label, name, value, onChange, type = "text" }) {
   return (
     <div>
       <label className="block text-sm mb-1">
         {label} <span className="text-red-500">*</span>
       </label>
 
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="
-            w-full p-2 rounded-lg
+      <div className="relative">
+        <input
+          type={isPassword ? (show ? "text" : "password") : type}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className="
+            w-full p-2 pr-10 rounded-lg
             border border-[var(--border)]
             bg-[var(--bg)]
             outline-none
             focus:border-[var(--primary)]
           "
-      />
-    </div>
+        />
 
+        {/* 👁 Eye Icon */}
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
+            className="
+              absolute right-3 top-1/2 -translate-y-1/2
+              text-[var(--text-secondary)]
+              hover:text-[var(--text)]
+            "
+          >
+            {show ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

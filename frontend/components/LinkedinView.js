@@ -43,6 +43,7 @@ export default function LinkedInActivities({ candidateId }) {
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
+  
   const getTaskIcon = (type) => {
     switch (type) {
       case "TIPS":
@@ -229,7 +230,6 @@ export default function LinkedInActivities({ candidateId }) {
         </div>
       )}
 
-      {/* LIST VIEW (PRO UI) */}
       {/* LIST VIEW */}
       {!loading && linkedinTasks.length > 0 && (
         <div className="space-y-4">

@@ -27,13 +27,10 @@ const makeAPIRequest = async (endpoint, options = {}) => {
       ? localStorage.getItem(config.JWT_STORAGE_KEY)
       : null;
 
-  console.log("🌐 API:", url);
-  console.log("🔐 TOKEN:", token);
-
   try {
     const res = await fetch(url, {
       method: options.method || "GET",
-      body: options.method === "GET" ? undefined : options.body, // ✅ FIX
+      body: options.method === "GET" ? undefined : options.body,
       headers: {
         "Content-Type": "application/json",
         ...(token && { Authorization: `Bearer ${token}` })
@@ -58,8 +55,6 @@ const makeAPIRequest = async (endpoint, options = {}) => {
 
     if (!res.ok) {
       if (res.status === 401) {
-        console.warn("⚠️ Unauthorized - logging out");
-
         if (typeof window !== "undefined") {
           localStorage.removeItem(config.JWT_STORAGE_KEY);
           localStorage.removeItem(config.USER_STORAGE_KEY);
@@ -67,8 +62,9 @@ const makeAPIRequest = async (endpoint, options = {}) => {
         }
       }
 
+      // ✅ CLEAN MESSAGE (NO JSON STRING)
       throw new AuthAPIError(
-        data?.message || `API Error (${res.status})`,
+        data?.message || "API Error",
         res.status
       );
     }
@@ -76,16 +72,16 @@ const makeAPIRequest = async (endpoint, options = {}) => {
     return data;
 
   } catch (err) {
-    console.error("❌ NETWORK ERROR:", err);
+    console.error("❌ API ERROR:", err);
 
-    // 🔥 Better error message
-    if (err.message === "Failed to fetch") {
-      throw new Error(
-        "CORS / API Gateway issue: OPTIONS request failing (check backend)"
-      );
+    if (err instanceof AuthAPIError) {
+      throw err;
     }
 
-    throw new Error("Backend not reachable");
+    throw new AuthAPIError(
+      err.message || "Backend not reachable",
+      500
+    );
   }
 };
 
@@ -115,7 +111,6 @@ export const authAPI = {
     return res;
   },
 
-  /* 👥 ASSISTANTS */
   getAssistants: async () => {
     return makeAPIRequest("/admin/assistants");
   },
@@ -126,12 +121,10 @@ export const authAPI = {
       body: JSON.stringify(payload)
     });
   },
-
   /* 👤 CANDIDATES */
   getCandidates: async () => {
     return makeAPIRequest("/admin/candidates");
   },
-
   /* 📊 CANDIDATE DETAILS */
 
   getJobApplications: async (candidateId, date) => {
