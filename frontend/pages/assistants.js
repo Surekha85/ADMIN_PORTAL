@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { UserCog } from "lucide-react";
 import { authAPI } from "../services/authAPI";
+import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 
 export default function AssistantsPage() {
-  const [assistants, setAssistants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const router = useRouter();
 
+  const [assistants, setAssistants] = useState([]);
+  const [selectedAssistant, setSelectedAssistant] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
   const [form, setForm] = useState({
@@ -16,54 +21,75 @@ export default function AssistantsPage() {
     password: ""
   });
 
-  const [submitting, setSubmitting] = useState(false);
-
-  // 🔥 FETCH ASSISTANTS
-  const fetchAssistants = async () => {
-    try {
-      const res = await authAPI.getAssistants();
-      setAssistants(res || []);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load assistants");
-      toast.error(err.message || "Failed to load assistants");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAssistants();
-  }, []);
-
-  // 🔥 HANDLE INPUT
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 🔥 CREATE ASSISTANT
+  //////////////////////////////////////////////////////
+  // LOAD DATA
+  //////////////////////////////////////////////////////
+  useEffect(() => {
+    const load = async () => {
+      try {
+        let res = await authAPI.getAssistants();
+
+        if (res?.body) res = JSON.parse(res.body);
+
+        let parsed = [];
+
+        if (typeof res?.assistants === "string") {
+          parsed = JSON.parse(res.assistants);
+        } else if (Array.isArray(res?.assistants)) {
+          parsed = res.assistants;
+        }
+
+        setAssistants(parsed);
+        setSelectedAssistant(parsed[0] || null);
+
+      } catch (e) {
+        console.error(e);
+        toast.error("Failed to load assistants");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
   const handleCreate = async () => {
     const { first_name, last_name, email, password } = form;
 
-    // VALIDATION
     if (!first_name || !last_name || !email || !password) {
-      toast.error("All fields are required");
+      toast.error("Please fill mandatory fields");
       return;
     }
 
     try {
-      setSubmitting(true);
-
-      toast.loading("Creating assistant...", { id: "createAssistant" });
+      toast.loading("Creating assistant...", { id: "create" });
 
       await authAPI.createAssistant(form);
 
-      toast.success("Assistant created successfully", {
-        id: "createAssistant"
-      });
+      toast.success("Assistant created", { id: "create" });
 
-      await fetchAssistants();
+      // ✅ REFRESH DATA (IMPORTANT)
+      let res = await authAPI.getAssistants();
 
+      if (res?.body) res = JSON.parse(res.body);
+
+      let parsed = [];
+
+      if (typeof res?.assistants === "string") {
+        parsed = JSON.parse(res.assistants);
+      } else if (Array.isArray(res?.assistants)) {
+        parsed = res.assistants;
+      }
+
+      setAssistants(parsed);
+      setSelectedAssistant(parsed[0] || null);
+
+      // reset
+      setShowModal(false);
       setForm({
         first_name: "",
         last_name: "",
@@ -71,113 +97,239 @@ export default function AssistantsPage() {
         password: ""
       });
 
-      setShowModal(false);
     } catch (err) {
-      console.error("CREATE ERROR:", err);
-
-      toast.error(err.message || "Failed to create assistant", {
-        id: "createAssistant"
+      toast.error(err.message || "Error creating assistant", {
+        id: "create"
       });
-    } finally {
-      setSubmitting(false);
     }
   };
 
-  if (loading) return <div className="p-6">Loading assistants...</div>;
+  //////////////////////////////////////////////////////
+  // LOADER
+  //////////////////////////////////////////////////////
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[var(--bg)] text-[var(--text)]">
+        Loading assistants...
+      </div>
+    );
+  }
 
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
-
+  //////////////////////////////////////////////////////
+  // UI
+  //////////////////////////////////////////////////////
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-8">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-semibold">All Assistants</h1>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            Assistants ({assistants.length})
+          </h1>
+          <p className="text-sm text-[var(--text-secondary)]">
+            Manage all assistants
+          </p>
+        </div>
 
         <button
-          onClick={() => {
-            setShowModal(true);
-            toast("Fill details to create assistant", { icon: "ℹ️" });
-          }}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          onClick={() => setShowModal(true)}
+          className="
+            px-4 py-2 rounded-lg
+            bg-[var(--primary)]/20 text-[var(--primary)]
+            hover:bg-[var(--primary)]/30
+          "
         >
           + Create Assistant
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 dark:bg-[#1e293b] text-left">
-            <tr>
-              <th className="p-3 border">Name</th>
-              <th className="p-3 border">Email</th>
-              <th className="p-3 border">Assistant ID</th>
-              <th className="p-3 border">Assigned Candidates</th>
-              <th className="p-3 border">Last Login</th>
-              <th className="p-3 border">Created At</th>
-            </tr>
-          </thead>
+      {/* EMPTY */}
+      {assistants.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-[60vh]">
 
-          <tbody>
-            {assistants.map((a) => (
-              <tr key={a.assistantId} className="hover:bg-gray-50 dark:hover:bg-[#0f172a]">
-                <td className="p-3 border font-medium">
-                  {a.first_name} {a.last_name}
-                </td>
-                <td className="p-3 border">{a.email}</td>
-                <td className="p-3 border text-xs">{a.assistantId}</td>
-                <td className="p-3 border">
-                  {a.assigned_candidates?.length || 0}
-                </td>
-                <td className="p-3 border">
-                  {a.last_login
-                    ? new Date(a.last_login).toLocaleString()
-                    : "—"}
-                </td>
-                <td className="p-3 border">
-                  {new Date(a.createdAt).toLocaleDateString()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          <div className="w-20 h-20 mb-6 flex items-center justify-center rounded-full bg-[var(--border)] text-3xl">
+            👨‍💼
+          </div>
 
-      {assistants.length === 0 && (
-        <p className="mt-4 text-gray-500">No assistants found.</p>
+          <h2 className="text-xl font-semibold">
+            No Assistants Found
+          </h2>
+
+          <p className="text-sm text-[var(--text-secondary)] mt-2">
+            Assistants will appear here once created.
+          </p>
+        </div>
+      ) : (
+
+        <div className="space-y-4">
+
+          {assistants.map((a) => {
+            const isActive =
+              selectedAssistant?.assistantId === a.assistantId;
+
+            return (
+              <div
+                key={a.assistantId}
+                onClick={() => setSelectedAssistant(a)}
+                className={`
+                  p-5 rounded-2xl cursor-pointer transition-all duration-200
+                  border border-transparent card-hover
+                  bg-[var(--card)]
+
+                  ${isActive
+                    ? "bg-[var(--primary)]/10 border-[var(--primary)]/30"
+                    : "hover:bg-[var(--border)]"
+                  }
+                `}
+              >
+                <div className="grid grid-cols-[1fr_120px_180px] items-center">
+
+                  {/* LEFT */}
+                  <div className="flex gap-4 items-center">
+
+                    {/* Avatar */}
+                    <div className="
+      w-12 h-12 rounded-xl
+      flex items-center justify-center
+      font-bold text-lg text-white
+      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
+    ">
+                      {a.first_name?.[0]}
+                    </div>
+
+                    {/* Info */}
+                    <div>
+                      <p className="font-semibold">
+                        {a.first_name} {a.last_name}
+                      </p>
+
+                      <p className="text-sm text-[var(--text-secondary)]">
+                        {a.email}
+                      </p>
+
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        ID: {a.assistantId}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* MIDDLE */}
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      Assgined Candidates
+                    </span>
+
+                    <span className="text-2xl font-bold text-[var(--primary)]">
+                      {a.assigned_candidates?.length || 0}
+                    </span>
+                  </div>
+
+                  {/* RIGHT */}
+                  <div className="flex flex-col items-end gap-2">
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-[var(--text-secondary)]">
+                        Last Login:
+                      </span>
+
+                      {a.last_login ? (
+                        <span className="text-[var(--text)] font-medium">
+                          {new Date(a.last_login).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--border)] text-[var(--text-secondary)]">
+                          Never
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toast("Details page can be added");
+                      }}
+                      className="text-sm text-[var(--primary)] hover:underline"
+                    >
+                      View Details
+                    </button>
+
+                  </div>
+
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
       )}
-
-      {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-          <div className="bg-white dark:bg-[#1e293b] p-6 rounded-lg w-[400px] space-y-4">
+          <div className="bg-[var(--card)] p-6 rounded-xl w-[400px] space-y-4 border border-[var(--border)]">
 
-            <h2 className="text-xl font-semibold">Create Assistant</h2>
+            <h2 className="text-xl font-semibold">
+              Create Assistant
+            </h2>
 
+            {/* FORM */}
             <div className="space-y-3">
-              <Input label="First Name *" name="first_name" value={form.first_name} onChange={handleChange} />
-              <Input label="Last Name *" name="last_name" value={form.last_name} onChange={handleChange} />
-              <Input label="Email *" name="email" value={form.email} onChange={handleChange} />
-              <Input label="Password *" type="password" name="password" value={form.password} onChange={handleChange} />
+
+              <Input
+                label="First Name"
+                name="first_name"
+                value={form.first_name}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="Last Name"
+                name="last_name"
+                value={form.last_name}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="Email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+              />
+
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+              />
+
             </div>
 
+            {/* ACTIONS */}
             <div className="flex justify-end gap-2 pt-4">
+
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-4 py-2 bg-[var(--border)] rounded-lg"
               >
                 Cancel
               </button>
 
               <button
                 onClick={handleCreate}
-                disabled={submitting}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                disabled={
+                  !form.first_name || !form.last_name || !form.email || !form.password
+                }
+                className="
+                  px-4 py-2 rounded-lg
+                  bg-[var(--primary)] text-white
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
               >
-                {submitting ? "Creating..." : "Create"}
+                Create
               </button>
+
             </div>
 
           </div>
@@ -187,18 +339,29 @@ export default function AssistantsPage() {
   );
 }
 
-/* INPUT */
+
+
 function Input({ label, name, value, onChange, type = "text" }) {
   return (
     <div>
-      <label className="block text-sm mb-1">{label}</label>
+      <label className="block text-sm mb-1">
+        {label} <span className="text-red-500">*</span>
+      </label>
+
       <input
         type={type}
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full p-2 border rounded bg-white dark:bg-[#0f172a]"
+        className="
+            w-full p-2 rounded-lg
+            border border-[var(--border)]
+            bg-[var(--bg)]
+            outline-none
+            focus:border-[var(--primary)]
+          "
       />
     </div>
+
   );
 }

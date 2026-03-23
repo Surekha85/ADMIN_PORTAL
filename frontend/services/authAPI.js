@@ -120,6 +120,13 @@ export const authAPI = {
     return makeAPIRequest("/admin/assistants");
   },
 
+  createAssistant: async (payload) => {
+    return makeAPIRequest("/admin/create-assistant", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+
   /* 👤 CANDIDATES */
   getCandidates: async () => {
     return makeAPIRequest("/admin/candidates");
