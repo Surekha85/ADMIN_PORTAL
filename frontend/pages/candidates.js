@@ -189,19 +189,14 @@ export default function CandidatesPage() {
               {/* ACTION */}
               <div className="mt-3 text-right">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    goToDetails(c);
-                  }}
-                  className="
-                    px-2 py-1 text-xs rounded-lg
-                    bg-[#6366f1]/20 
-                    hover:bg-[#6366f1]/30
-                    transition
-                  "
-                >
-                  View Details
-                </button>
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetails(c);
+                      }}
+                      className="text-sm text-[var(--primary)] hover:underline"
+                    >
+                      View Details
+                    </button>
               </div>
 
             </div>

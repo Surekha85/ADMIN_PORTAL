@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, UserCog } from "lucide-react";
+import { Users, UserCog, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/router";
 import { authAPI } from "../services/authAPI";
 
@@ -42,20 +42,59 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex bg-[var(--bg)] text-[var(--text)] min-h-screen">
+    <div className="flex bg-[#f5f7fb] min-h-screen">
 
       {/* SIDEBAR */}
-      <aside className="w-64 bg-[var(--card)] p-6 border-r border-[var(--border)]">
-        <h2 className="text-xl font-semibold mb-8">Admin</h2>
+      <aside className="
+        w-64 bg-white p-4
+        border-r border-gray-200
+        flex flex-col justify-between
+        rounded-r-2xl shadow-sm
+      ">
+        <div>
+          <Menu
+            title="Dashboard"
+            icon={<LayoutDashboard size={18} />}
+            active={router.pathname === "/dashboard"}
+            onClick={() => router.push("/dashboard")}
+          />
 
-        <Menu title="Dashboard" onClick={() => router.push("/dashboard")} />
-        <Menu title="Candidates" onClick={() => router.push("/candidates")} />
-        <Menu title="Assistants" onClick={() => router.push("/assistants")} />
+          <Menu
+            title="Candidates"
+            icon={<Users size={18} />}
+            active={router.pathname === "/candidates"}
+            onClick={() => router.push("/candidates")}
+          />
+
+          <Menu
+            title="Assistants"
+            icon={<UserCog size={18} />}
+            active={router.pathname === "/assistants"}
+            onClick={() => router.push("/assistants")}
+          />
+        </div>
+
+        {/* Bottom */}
+        <div className="text-xs text-gray-400 text-center border-t pt-3">
+          🚀 More features coming soon
+        </div>
       </aside>
 
       {/* MAIN */}
       <main className="flex-1 p-8">
+
+        {/* HEADER */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500">
+            Overview of platform activity
+          </p>
+        </div>
+
         <DashboardOverview candidates={candidates} assistants={assistants} />
+
       </main>
     </div>
   );
@@ -64,17 +103,22 @@ export default function AdminDashboard() {
 //////////////////////////////////////////////////////
 // MENU
 //////////////////////////////////////////////////////
-function Menu({ title, onClick }) {
+function Menu({ title, icon, onClick, active }) {
   return (
     <div
       onClick={onClick}
-      className="
-        px-4 py-3 rounded-xl cursor-pointer
-        text-[var(--text-secondary)]
-        hover:bg-[var(--border)] hover:text-[var(--text)]
+      className={`
+        flex items-center gap-3
+        px-4 py-3 mb-2 rounded-xl cursor-pointer
         transition-all duration-200
-      "
+
+        ${active
+          ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-600 font-medium shadow-sm"
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+        }
+      `}
     >
+      {icon}
       {title}
     </div>
   );
@@ -90,7 +134,7 @@ function DashboardOverview({ candidates, assistants }) {
       <Card
         title="Total Candidates"
         value={candidates.length}
-        icon={<Users />}
+        icon={<Users size={20} />}
         subtitle={
           candidates.length === 0
             ? "No candidates yet"
@@ -102,7 +146,7 @@ function DashboardOverview({ candidates, assistants }) {
       <Card
         title="Total Assistants"
         value={assistants.length}
-        icon={<UserCog />}
+        icon={<UserCog size={20} />}
         subtitle="Mentors / Assistants"
         extra="Working"
       />
@@ -112,30 +156,29 @@ function DashboardOverview({ candidates, assistants }) {
 }
 
 //////////////////////////////////////////////////////
-// CARD (FULLY USING GLOBAL TOKENS)
+// CARD
 //////////////////////////////////////////////////////
 function Card({ title, value, icon, subtitle, extra }) {
   return (
     <div className="
-      bg-[var(--card)]
-      border border-[var(--border)]
+      bg-white border border-gray-200
       p-6 rounded-2xl
       min-h-[170px]
       flex flex-col justify-between
+      shadow-sm hover:shadow-md
       transition-all duration-300
-      hover:shadow-lg hover:-translate-y-1
     ">
 
       {/* Top */}
       <div className="flex items-center justify-between">
-        <div className="text-[var(--primary)] text-3xl">{icon}</div>
+        <div className="text-indigo-500 bg-indigo-50 p-2 rounded-lg">
+          {icon}
+        </div>
 
         {extra && (
           <span className="
-            text-xs 
-            px-3 py-1 rounded-full
-            bg-[var(--primary)]/20 
-            text-[var(--primary)]
+            text-xs px-3 py-1 rounded-full
+            bg-green-100 text-green-600 font-medium
           ">
             {extra}
           </span>
@@ -144,13 +187,15 @@ function Card({ title, value, icon, subtitle, extra }) {
 
       {/* Middle */}
       <div className="mt-4">
-        <p className="text-sm text-[var(--text-secondary)]">{title}</p>
-        <h2 className="text-4xl font-bold mt-1">{value}</h2>
+        <p className="text-sm text-gray-500">{title}</p>
+        <h2 className="text-4xl font-bold mt-1 text-gray-800">
+          {value}
+        </h2>
       </div>
 
       {/* Bottom */}
       {subtitle && (
-        <p className="text-xs text-[var(--text-secondary)] mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           {subtitle}
         </p>
       )}
