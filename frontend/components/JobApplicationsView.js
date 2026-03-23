@@ -3,211 +3,298 @@
 import { useEffect, useState } from "react";
 import { authAPI } from "../services/authAPI";
 import { useSortableData } from "../hooks/sortableData";
-import { ChevronDown, ChevronUp, Pencil } from "lucide-react";
-import { ExternalLink, Download } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Target,
+  Zap,
+  ExternalLink,
+  Download
+} from "lucide-react";
 
-export default function JobApplicationsView({ candidateId, date }) {
+export default function JobApplicationsView({ candidateId }) {
 
-  const [toast, setToast] = useState(null);
+  const today = new Date().toISOString().split("T")[0];
+
   const [data, setData] = useState(null);
+  const [date, setDate] = useState(today);
   const [expandedId, setExpandedId] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [showQA, setShowQA] = useState(true);
 
-  const [showModal, setShowModal] = useState(false);
-
-  const [form, setForm] = useState({
-    company: "",
-    role: "",
-    job_link: "",
-    applied_via: "",
-    employment_type: "",
-    experience: "",
-    ats_score: ""
-  });
-
-  /* ================= FETCH ================= */
+  //////////////////////////////////////////////////////
+  // LOAD DATA
+  //////////////////////////////////////////////////////
   const fetchData = async () => {
     if (!candidateId) return;
 
-    const res = await authAPI.getJobApplications(candidateId, date);
-    const parsed =
-      typeof res.body === "string" ? JSON.parse(res.body) : res;
+    try {
+      const res = await authAPI.getJobApplications(candidateId, date);
 
-    setData(parsed);
+      const parsed =
+        typeof res?.body === "string" ? JSON.parse(res.body) : res;
+
+      setData(parsed);
+    } catch (e) {
+      console.error(e);
+      showToast("Failed to load applications ❌");
+    }
   };
 
   useEffect(() => {
-    if (!candidateId || !date) return;
-
     fetchData();
 
     const stored = localStorage.getItem("selectedCandidate");
-    if (stored) setSelectedCandidate(JSON.parse(stored));
+    if (stored) {
+      try {
+        setSelectedCandidate(JSON.parse(stored));
+      } catch {}
+    }
   }, [candidateId, date]);
 
   const { sortedItems } = useSortableData(data?.applications || []);
 
-  /* ================= WEEK ================= */
-  const getWeekRange = (dateStr) => {
-    const d = new Date(dateStr);
-    const start = new Date(d);
-    const day = start.getDay();
-    const diff = start.getDate() - day + (day === 0 ? -6 : 1);
-    start.setDate(diff);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-
-    const format = (x) => x.toISOString().split("T")[0];
-    return { start: format(start), end: format(end) };
+  //////////////////////////////////////////////////////
+  // HELPERS
+  //////////////////////////////////////////////////////
+  const getColor = (score) => {
+    if (score < 70) return "text-red-400 bg-red-400/20";
+    if (score < 85) return "text-yellow-400 bg-yellow-400/20";
+    return "text-green-400 bg-green-400/20";
   };
-
-  const week = getWeekRange(date);
-
-  const showToast = (msg, type = "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  return (
-    <div className="p-2">
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
-      {/* TOAST */}
+  //////////////////////////////////////////////////////
+  // DOWNLOAD
+  //////////////////////////////////////////////////////
+  const handleDownload = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+
+      const ext = url.split(".").pop().split("?")[0];
+
+      const name = `${selectedCandidate?.first_name || "candidate"}_${selectedCandidate?.last_name || ""}`;
+
+      const link = document.createElement("a");
+      link.href = window.URL.createObjectURL(blob);
+      link.download = `${name}_resume.${ext}`;
+      link.click();
+
+    } catch (e) {
+      console.error(e);
+      showToast("Download failed ❌");
+    }
+  };
+
+  //////////////////////////////////////////////////////
+  // UI
+  //////////////////////////////////////////////////////
+  return (
+    <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
+
       {toast && (
-        <div className={`toast ${toast.type === "success" ? "toast-success" : "toast-error"}`}>
-          {toast.msg}
-        </div>
+        <div className="mb-4 text-red-400">{toast}</div>
       )}
 
-      {/* HEADER (NO BACK, NO ADD BUTTON) */}
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold">
-          {selectedCandidate?.first_name || "Candidate"} – Job Applications
-        </h1>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
 
-        <p className="text-sm text-[var(--text-secondary)]">
-          {week.start} → {week.end}
-        </p>
+        <div>
+          <h1 className="text-2xl font-semibold">
+            Job Applications
+          </h1>
+          <p className="text-sm text-gray-400">
+            Candidate ID: {candidateId}
+          </p>
+        </div>
+
+        <input
+          type="date"
+          value={date}
+          max={today}
+          onChange={(e) => setDate(e.target.value)}
+          className="px-3 py-2 rounded-lg bg-[var(--card)] border"
+        />
       </div>
 
       {/* EMPTY */}
       {sortedItems.length === 0 && (
-        <div className="empty-box">
-          <p className="text-lg font-medium">No Applications Found</p>
+        <div className="text-center text-gray-400">
+          No Applications Found
         </div>
       )}
 
       {/* LIST */}
       <div className="space-y-4">
+
         {sortedItems.map((j, i) => {
           const isExpanded = expandedId === i;
 
           return (
-            <div key={i} className="p-5 rounded-2xl bg-[var(--card)] card-hover">
+            <div
+              key={i}
+              className="p-5 rounded-2xl bg-[var(--card)] shadow-md
+              hover:shadow-xl hover:scale-[1.02] hover:bg-[var(--bg-secondary)]
+              transition-all duration-200 cursor-pointer"
+            >
 
               {/* TOP */}
               <div className="flex justify-between items-center">
 
                 <div>
                   <p className="font-semibold text-lg">{j.job_title}</p>
-                  <p className="text-sm text-gray-400">{j.company_name}</p>
+                  <p className="text-sm text-gray-400">
+                    {j.company_name}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex gap-2 flex-wrap items-center">
 
-                  <span className="text-green-400 text-sm">
-                    {j.application_date}
+                  <span className={` flex items-center gap-1 px-3 py-1 text-xs rounded-full ${getColor(j.ats_score)}`}>
+                    <Target size={12} /> {j.ats_score || 0}%
                   </span>
 
-                  <span className="px-3 py-1 rounded-full text-xs bg-yellow-400/20 text-yellow-300">
+                  <span className={` flex items-center gap-1 px-3 py-1 text-xs rounded-full ${getColor(100 - j.ai_detection_score)}`}>
+                    <Zap size={12} /> AI {j.ai_detection_score || 0}%
+                  </span>
+
+                  <span className="px-3 py-1 text-xs rounded-full bg-yellow-400/20 text-yellow-300">
                     {j.approval_status || "Pending"}
                   </span>
 
                   <button
                     onClick={() => toggleExpand(i)}
-                    className="p-2 hover:bg-[var(--bg-secondary)] rounded"
+                    className="p-2 rounded-md hover:bg-[var(--bg-secondary)] transition"
                   >
                     {isExpanded ? <ChevronUp /> : <ChevronDown />}
                   </button>
-
                 </div>
               </div>
 
-              {/* EXPANDED */}
+              {/* 🔥 EXPANDED SECTION (UNCHANGED STRUCTURE) */}
               {isExpanded && (
                 <div className="mt-4 grid grid-cols-2 gap-4 text-sm border-t pt-4">
 
                   <div>
                     <p className="text-gray-400">Applied Via</p>
-                    <p>{j.applied_via}</p>
+                    <p>{j.applied_via || "-"}</p>
                   </div>
 
                   <div>
                     <p className="text-gray-400">Employment</p>
-                    <p>{j.employment_type}</p>
+                    <p>{j.employment_type || "-"}</p>
                   </div>
 
                   <div>
                     <p className="text-gray-400">Experience</p>
-                    <p>{j.experience}</p>
+                    <p>{j.experience || "-"}</p>
                   </div>
 
                   <div>
                     <p className="text-gray-400">ATS Score</p>
-                    <p>{j.ats_score}</p>
+                    <p>{j.ats_score || "-"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">AI Detection</p>
+                    <p>{j.ai_detection_score || "-"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Status</p>
+                    <p>{j.approval_status || "Pending"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Application Date</p>
+                    <p>{j.application_date || "-"}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Created At</p>
+                    <p>{j.created_at ? j.created_at.split("T")[0] : "-"}</p>
                   </div>
 
                   <div className="col-span-2 flex gap-3 mt-3">
+
                     <button
                       onClick={() => window.open(j.application_link, "_blank")}
-                      className="px-4 py-2 btn-blue flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition"
                     >
-                      <ExternalLink size={16} />
-                      View
+                      <ExternalLink size={16} /> View Application
                     </button>
 
                     <button
-                      onClick={() => window.open(j.resume_s3_url, "_blank")}
-                      className="px-4 py-2 btn-green flex items-center gap-2"
+                      onClick={() => handleDownload(j.resume_s3_url)}
+                      className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition"
                     >
-                      <Download size={16} />
-                      Resume
+                      <Download size={16} /> Download Resume
                     </button>
+
                   </div>
+
+                  {j.questionsAndAnswers && j.questionsAndAnswers.length > 0 && (
+                    <div className="col-span-2 mt-4">
+
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-gray-400 text-sm">
+                          Screening Questions & Answers
+                        </p>
+
+                        <button
+                          onClick={() => setShowQA(!showQA)}
+                          className="text-xs px-3 py-1 rounded-md bg-gray-700 hover:bg-gray-600 transition"
+                        >
+                          {showQA ? "Hide" : "Show"}
+                        </button>
+                      </div>
+
+                      {showQA && (
+                        <div className="space-y-3">
+                          {j.questionsAndAnswers.map((qa, idx) => (
+                            <div
+                              key={idx}
+                              className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-gray-700"
+                            >
+                              <p className="text-xs text-gray-400 mb-1 text-red-400">
+                                Question {idx + 1}
+                              </p>
+                              <p className="font-medium mb-2">
+                                {qa.question}
+                              </p>
+
+                              <p className="text-xs text-gray-400 mb-1 text-green-400">
+                                Answer
+                              </p>
+                              <p className="font-medium">
+                                {qa.answer}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                    </div>
+                  )}
 
                 </div>
               )}
             </div>
           );
         })}
+
       </div>
-
-      {/* MODAL (kept same UI) */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--card)] w-full max-w-2xl rounded-2xl p-6">
-
-            <h2 className="text-xl mb-4">
-              {editJob ? "Edit Job Application" : "Add Job"}
-            </h2>
-
-            {/* form same as before (kept minimal here) */}
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setShowModal(false)}>Cancel</button>
-              <button onClick={handleSubmit} className="btn-blue">
-                Submit
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
