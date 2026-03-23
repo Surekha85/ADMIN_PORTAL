@@ -10,7 +10,7 @@ import GithubActivitiesView from "../components/GithubActivitiesView";
 import ProfileView from "../components/ProfileView";
 import Portfolio from "../components/Portfolio";
 
-export default function CandidateDetails() {
+export default function AssistantDetails() {
   const router = useRouter();
   const { id } = router.query;
 
@@ -31,10 +31,10 @@ export default function CandidateDetails() {
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <Link href='/candidates' className="relative group">
+        <Link href='/assistants' className="relative group">
           <span className="btn-back hover">
             <ArrowLeft size={16} />
-            Back to Candidates
+            Back to Assistants
           </span>
         </Link>  
         
@@ -69,19 +69,19 @@ export default function CandidateDetails() {
       <div className="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
 
         {activeTab === "profile" && (
-          <ProfileView candidateId={id} />
+          <ProfileView assistantId={id} />
         )}
 
         {activeTab === "applications" && (
-          <JobApplicationsView candidateId={id} />
+          <JobApplicationsView assistantId={id} />
         )}
 
         {activeTab === "linkedin" && (
-          <LinkedinView candidateId={id} />
+          <LinkedinView assistantId={id} />
         )}
 
         {activeTab === "github" && (
-          <GithubActivitiesView candidateId={id} />
+          <GithubActivitiesView assistantId={id} />
         )}
 
         {activeTab === "portfolio" && (

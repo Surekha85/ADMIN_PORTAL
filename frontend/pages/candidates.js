@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { authAPI } from "../services/authAPI";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 export default function CandidatesPage() {
   const router = useRouter();
@@ -47,9 +48,9 @@ export default function CandidatesPage() {
   //////////////////////////////////////////////////////
   // NAVIGATION
   //////////////////////////////////////////////////////
-  const goToDetails = (c) => {
-    localStorage.setItem("selectedCandidate", JSON.stringify(c));
-    router.push(`/candidate_details?id=${c.jaa_candidate_id}`);
+  const goToDetails = (a) => {
+    localStorage.setItem("selectedCandidate", JSON.stringify(a));
+    router.push(`/candidate_details?id=${a.jaa_candidate_id}`);
   };
 
   //////////////////////////////////////////////////////
@@ -72,12 +73,12 @@ export default function CandidatesPage() {
       {/* HEADER */}
       <div className="mb-6 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.back()}
-            className="px-3 py-1.5 rounded-lg text-white btn-blue"
-          >
-            ← Back
-          </button>
+          <Link href='/dashboard' className="relative group">
+            <span className="btn-back hover">
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </span>
+          </Link>  
 
           <div>
             <h1 className="text-2xl font-semibold text-[var(--text)]">
@@ -181,7 +182,7 @@ export default function CandidatesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        goToDetails(e);
+                        goToDetails(a);
                         
                       }}
                       className="text-sm text-[var(--primary)] hover:underline"

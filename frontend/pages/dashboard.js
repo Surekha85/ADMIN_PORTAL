@@ -60,17 +60,17 @@ export default function AdminDashboard() {
           />
 
           <Menu
-            title="Candidates"
-            icon={<Users size={18} />}
-            active={router.pathname === "/candidates"}
-            onClick={() => router.push("/candidates")}
-          />
-
-          <Menu
             title="Assistants"
             icon={<UserCog size={18} />}
             active={router.pathname === "/assistants"}
             onClick={() => router.push("/assistants")}
+          />
+
+          <Menu
+            title="Candidates"
+            icon={<Users size={18} />}
+            active={router.pathname === "/candidates"}
+            onClick={() => router.push("/candidates")}
           />
         </div>
 

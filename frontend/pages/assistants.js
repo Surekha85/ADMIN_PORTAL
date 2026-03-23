@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { authAPI } from "../services/authAPI";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function AssistantsPage() {
   const router = useRouter();
@@ -107,6 +108,14 @@ export default function AssistantsPage() {
   };
 
   //////////////////////////////////////////////////////
+  // NAVIGATION
+  //////////////////////////////////////////////////////
+  const goToDetails = (a) => {
+    localStorage.setItem("selectedAssistant", JSON.stringify(a));
+    router.push(`/assistants_details?id=${a.assistantId}`);
+  };
+
+  //////////////////////////////////////////////////////
   // LOADER
   //////////////////////////////////////////////////////
   if (loading) {
@@ -128,13 +137,12 @@ export default function AssistantsPage() {
 
         {/* LEFT: Back + Title */}
         <div className="flex items-center gap-3">
-
-          <button
-            onClick={() => router.back()}
-            className="px-3 py-1.5 rounded-lg text-white btn-blue"
-          >
-            ← Back
-          </button>
+          <Link href='/dashboard' className="relative group">
+            <span className="btn-back hover">
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </span>
+          </Link>  
 
           <h1 className="text-2xl font-semibold">
             Assistants
@@ -259,7 +267,7 @@ export default function AssistantsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        toast("Details page can be added");
+                        goToDetails(a);
                       }}
                       className="text-sm text-[var(--primary)] hover:underline"
                     >
