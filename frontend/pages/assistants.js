@@ -22,9 +22,39 @@ export default function AssistantsPage() {
     password: ""
   });
 
+  // ✅ PASSWORD VALIDATION STATE
+  const [passwordValidation, setPasswordValidation] = useState({
+    rules: {
+      minLength: false,
+      hasUppercase: false,
+      hasLowercase: false,
+      hasNumber: false,
+      hasSpecial: false
+    }
+  });
+
+  //////////////////////////////////////////////////////
+  // HANDLE CHANGE (UPDATED)
+  //////////////////////////////////////////////////////
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    setForm({ ...form, [name]: value });
+
+    if (name === "password") {
+      setPasswordValidation({
+        rules: {
+          minLength: value.length >= 8,
+          hasUppercase: /[A-Z]/.test(value),
+          hasLowercase: /[a-z]/.test(value),
+          hasNumber: /[0-9]/.test(value),
+          hasSpecial: /[^A-Za-z0-9]/.test(value)
+        }
+      });
+    }
   };
+
+  const isPasswordValid = Object.values(passwordValidation.rules).every(Boolean);
 
   //////////////////////////////////////////////////////
   // LOAD DATA
@@ -66,6 +96,11 @@ export default function AssistantsPage() {
       return;
     }
 
+    if (!isPasswordValid) {
+      toast.error("Password does not meet requirements");
+      return;
+    }
+
     try {
       toast.loading("Creating assistant...", { id: "create" });
 
@@ -95,6 +130,17 @@ export default function AssistantsPage() {
         last_name: "",
         email: "",
         password: ""
+      });
+
+      // reset validation
+      setPasswordValidation({
+        rules: {
+          minLength: false,
+          hasUppercase: false,
+          hasLowercase: false,
+          hasNumber: false,
+          hasSpecial: false
+        }
       });
 
     } catch (err) {
@@ -142,7 +188,7 @@ export default function AssistantsPage() {
               <ArrowLeft size={16} />
               Back to Dashboard
             </span>
-          </Link>  
+          </Link>
 
           <h1 className="text-2xl font-semibold">
             Assistants
@@ -161,7 +207,6 @@ export default function AssistantsPage() {
         >
           + Create Assistant
         </button>
-
       </div>
 
       {/* EMPTY */}
@@ -324,6 +369,39 @@ export default function AssistantsPage() {
                 onChange={handleChange}
               />
 
+              {/* ✅ PASSWORD RULES UI */}
+              {form.password && (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600 dark:text-gray-300">
+                    Password Requirements:
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {Object.entries({
+                      minLength: "8+ characters",
+                      hasUppercase: "Uppercase letter",
+                      hasLowercase: "Lowercase letter",
+                      hasNumber: "Number",
+                      hasSpecial: "Special character"
+                    }).map(([key, label]) => (
+                      <div
+                        key={key}
+                        className={`flex items-center space-x-1 ${
+                          passwordValidation.rules[key]
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        <span>
+                          {passwordValidation.rules[key] ? "✓" : "✗"}
+                        </span>
+                        <span>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </div>
 
             {/* ACTIONS */}
@@ -339,7 +417,10 @@ export default function AssistantsPage() {
               <button
                 onClick={handleCreate}
                 disabled={
-                  !form.first_name || !form.last_name || !form.email || !form.password
+                  !form.first_name ||
+                  !form.last_name ||
+                  !form.email ||
+                  !isPasswordValid
                 }
                 className="
                   px-4 py-2 rounded-lg

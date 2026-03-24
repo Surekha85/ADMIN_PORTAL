@@ -144,7 +144,10 @@ export default function CandidatesPage() {
                       </p>
 
                       <p className="text-xs text-[var(--text-secondary)]">
-                        ID: {a.candidateId}
+                        User ID: {a.user_id}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        JAA Candidate ID: {a.jaa_candidate_id}
                       </p>
                     </div>
                   </div>
@@ -152,7 +155,7 @@ export default function CandidatesPage() {
                   {/* MIDDLE */}
                   <div className="flex flex-col items-center">
                     <span className="text-xs text-[var(--text-secondary)]">
-                      Assgined Candidates
+                      Assgined Assistant
                     </span>
 
                     <span className="text-2xl font-bold text-[var(--primary)]">
@@ -165,18 +168,12 @@ export default function CandidatesPage() {
 
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-[var(--text-secondary)]">
-                        Last Login:
+                        Created At:
                       </span>
 
-                      {a.last_login ? (
-                        <span className="text-[var(--text)] font-medium">
-                          {new Date(a.last_login).toLocaleDateString()}
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded-full bg-[var(--border)] text-[var(--text-secondary)]">
-                          Never
-                        </span>
-                      )}
+                      <span className="text-[var(--text)] font-medium">
+                          {new Date(a.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
 
                     <button
