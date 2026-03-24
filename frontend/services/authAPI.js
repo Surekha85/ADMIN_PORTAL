@@ -121,6 +121,16 @@ export const authAPI = {
       body: JSON.stringify(payload)
     });
   },
+
+  assignAssistant: async (data) => {
+    return makeAPIRequest("/admin/assign-assistant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then(res => res.json());
+  },
   /* 👤 CANDIDATES */
   getCandidates: async () => {
     return makeAPIRequest("/admin/candidates");

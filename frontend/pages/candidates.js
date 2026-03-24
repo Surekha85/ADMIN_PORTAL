@@ -10,7 +10,9 @@ export default function CandidatesPage() {
   const router = useRouter();
 
   const [candidates, setCandidates] = useState([]);
+  const [assistants, setAssistants] = useState([]);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
   //////////////////////////////////////////////////////
@@ -33,7 +35,19 @@ export default function CandidatesPage() {
         }
 
         setCandidates(parsed);
-        setSelectedCandidate(parsed[0] || null);
+
+        // 🔥 Load assistants also
+        let ares = await authAPI.getAssistants();
+        if (ares?.body) ares = JSON.parse(ares.body);
+
+        let parsedAssistants = [];
+        if (typeof ares?.assistants === "string") {
+          parsedAssistants = JSON.parse(ares.assistants);
+        } else if (Array.isArray(ares?.assistants)) {
+          parsedAssistants = ares.assistants;
+        }
+
+        setAssistants(parsedAssistants);
 
       } catch (e) {
         console.error(e);
@@ -53,6 +67,31 @@ export default function CandidatesPage() {
     router.push(`/candidate_details?id=${a.jaa_candidate_id}`);
   };
 
+  const handleAssign = async (assistant) => {
+    try {
+      // 🔥 CALL API
+      await authAPI.assignAssistant({
+        candidateId: selectedCandidate.jaa_candidate_id,
+        assistantId: assistant.assistantId
+      });
+
+      // ✅ UPDATE UI AFTER SUCCESS
+      setCandidates(prev =>
+        prev.map(c =>
+          c.jaa_candidate_id === selectedCandidate.jaa_candidate_id
+            ? { ...c, assignedAssistant: assistant }
+            : c
+        )
+      );
+
+      setShowAssignModal(false);
+
+    } catch (e) {
+      console.error("Assign error:", e);
+      alert("Failed to assign assistant");
+    }
+  };
+
   //////////////////////////////////////////////////////
   // LOADER
   //////////////////////////////////////////////////////
@@ -60,9 +99,11 @@ export default function CandidatesPage() {
     return (
       <div className="h-screen flex items-center justify-center bg-[#0B1120]">
         <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        Loading...
       </div>
     );
   }
+
 
   //////////////////////////////////////////////////////
   // UI
@@ -78,7 +119,7 @@ export default function CandidatesPage() {
               <ArrowLeft size={16} />
               Back to Dashboard
             </span>
-          </Link>  
+          </Link>
 
           <div>
             <h1 className="text-2xl font-semibold text-[var(--text)]">
@@ -108,92 +149,123 @@ export default function CandidatesPage() {
 
         <div className="space-y-3">
 
-          {candidates.map((a) => (
-            <div
-                key={a.candidateId}
-                onClick={() => setSelectedAssistant(a)}
-                className={`
-                  p-5 rounded-2xl cursor-pointer transition-all duration-200
-                  border border-transparent card-hover
-                  bg-[var(--card)]
-                `}
+          {candidates.map((a) => {
+            const assigned =
+              a.assistantAssignedTo  || null;
+
+            return (
+              <div
+                key={a.jaa_candidate_id}
+                className="p-5 rounded-2xl cursor-pointer bg-[var(--card)]"
               >
-                <div className="grid grid-cols-[1fr_120px_180px] items-center">
+                <div className="grid grid-cols-[1fr_150px_180px] items-center">
 
                   {/* LEFT */}
                   <div className="flex gap-4 items-center">
-
-                    {/* Avatar */}
-                    <div className="
-                      w-12 h-12 rounded-xl
-                      flex items-center justify-center
-                      font-bold text-lg text-white
-                      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
-                    ">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400">
                       {a.first_name?.[0]}
                     </div>
 
-                    {/* Info */}
                     <div>
                       <p className="font-semibold">
                         {a.first_name} {a.last_name}
                       </p>
-
                       <p className="text-sm text-[var(--text-secondary)]">
                         {a.email}
-                      </p>
-
-                      <p className="text-xs text-[var(--text-secondary)]">
-                        User ID: {a.user_id}
-                      </p>
-                      <p className="text-xs text-[var(--text-secondary)]">
-                        JAA Candidate ID: {a.jaa_candidate_id}
                       </p>
                     </div>
                   </div>
 
                   {/* MIDDLE */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-start pl-4">
+
                     <span className="text-xs text-[var(--text-secondary)]">
-                      Assgined Assistant
+                      Assigned Assistant
                     </span>
 
-                    <span className="text-2xl font-bold text-[var(--primary)]">
-                      {a.assigned_candidates?.length || 0}
-                    </span>
+                    {assigned ? (
+                      <span className="text-green-500 font-semibold">
+                        {a.first_name} {a.last_name}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCandidate(a);
+                          setShowAssignModal(true);
+                        }}
+                        className="text-sm text-blue-400 underline"
+                      >
+                        + Assign Assistant
+                      </button>
+                    )}
+
                   </div>
 
                   {/* RIGHT */}
                   <div className="flex flex-col items-end gap-2">
-
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-[var(--text-secondary)]">
-                        Created At:
-                      </span>
-
-                      <span className="text-[var(--text)] font-medium">
-                          {new Date(a.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        goToDetails(a);
-                        
-                      }}
-                      className="text-sm text-[var(--primary)] hover:underline"
-                    >
-                      View Details
-                    </button>
-
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      {new Date(a.createdAt).toLocaleDateString()}
+                    </span>
                   </div>
 
                 </div>
-
               </div>
-          ))}
+            );
+          })}
 
+        </div>
+      )}
+      {/* MODAL */}
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+
+          <div className="bg-[var(--card)] p-6 rounded-xl w-[400px]">
+
+            <h2 className="text-lg font-semibold mb-4">
+              Assign Assistant to{" "}
+              <span className="text-[var(--primary)]">
+                {selectedCandidate?.first_name}
+              </span>
+            </h2>
+
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+
+              {assistants.map((a) => (
+                <div
+                  key={a.assistantId}
+                  className="p-3 border rounded-lg flex justify-between items-center"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {a.first_name} {a.last_name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {a.email}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleAssign(a)}
+                    className="text-sm bg-green-500 text-white px-3 py-1 rounded"
+                  >
+                    Assign
+                  </button>
+                </div>
+              ))}
+
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="px-4 py-2 bg-gray-700 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
 
