@@ -156,29 +156,44 @@ export default function CandidatesPage() {
             return (
               <div
                 key={a.jaa_candidate_id}
-                className="p-5 rounded-2xl cursor-pointer bg-[var(--card)]"
+                className="p-5 rounded-2xl cursor-pointer bg-[var(--card)] card-hover"
               >
                 <div className="grid grid-cols-[1fr_150px_180px] items-center">
 
                   {/* LEFT */}
                   <div className="flex gap-4 items-center">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400">
+
+                    {/* Avatar */}
+                    <div className="
+                      w-12 h-12 rounded-xl
+                      flex items-center justify-center
+                      font-bold text-lg text-white
+                      bg-gradient-to-br from-purple-500 via-pink-500 to-pink-400
+                    ">
                       {a.first_name?.[0]}
                     </div>
 
+                    {/* Info */}
                     <div>
                       <p className="font-semibold">
                         {a.first_name} {a.last_name}
                       </p>
+
                       <p className="text-sm text-[var(--text-secondary)]">
                         {a.email}
+                      </p>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        User Id: {a.user_id}
+                      </p>
+
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        JAA Candidate Id: {a.jaa_candidate_id}
                       </p>
                     </div>
                   </div>
 
                   {/* MIDDLE */}
-                  <div className="flex flex-col items-start pl-4">
-
+                  <div className="flex flex-col items-center">
                     <span className="text-xs text-[var(--text-secondary)]">
                       Assigned Assistant
                     </span>
@@ -196,7 +211,7 @@ export default function CandidatesPage() {
                         }}
                         className="text-sm text-blue-400 underline"
                       >
-                        + Assign Assistant
+                        + Assign
                       </button>
                     )}
 
@@ -204,9 +219,33 @@ export default function CandidatesPage() {
 
                   {/* RIGHT */}
                   <div className="flex flex-col items-end gap-2">
-                    <span className="text-xs text-[var(--text-secondary)]">
-                      {new Date(a.createdAt).toLocaleDateString()}
-                    </span>
+
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-[var(--text-secondary)]">
+                        Created On:
+                      </span>
+
+                      {a.createdAt ? (
+                        <span className="text-[var(--text)] font-medium">
+                          {new Date(a.createdAt).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-[var(--border)] text-[var(--text-secondary)]">
+                          Never
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToDetails(a);
+                      }}
+                      className="text-sm text-[var(--primary)] hover:underline"
+                    >
+                      View Details
+                    </button>
+
                   </div>
 
                 </div>
@@ -220,7 +259,7 @@ export default function CandidatesPage() {
       {showAssignModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-          <div className="bg-[var(--card)] p-6 rounded-xl w-[400px]">
+          <div className="bg-[var(--card)] p-6 rounded-xl w-[600px] ">
 
             <h2 className="text-lg font-semibold mb-4">
               Assign Assistant to{" "}
@@ -229,12 +268,12 @@ export default function CandidatesPage() {
               </span>
             </h2>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto overflow-x-hidden">
 
               {assistants.map((a) => (
                 <div
                   key={a.assistantId}
-                  className="p-3 border rounded-lg flex justify-between items-center"
+                  className="p-3 border rounded-lg flex justify-between items-center card-hover"
                 >
                   <div>
                     <p className="font-medium">
@@ -242,6 +281,9 @@ export default function CandidatesPage() {
                     </p>
                     <p className="text-xs text-gray-400">
                       {a.email}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {a.assistantId}
                     </p>
                   </div>
 
@@ -259,7 +301,7 @@ export default function CandidatesPage() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="px-4 py-2 bg-gray-700 rounded"
+                className="px-4 py-2 bg-gray-300 rounded"
               >
                 Cancel
               </button>
