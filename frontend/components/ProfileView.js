@@ -1,26 +1,57 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { authAPI } from "../services/authAPI";
 
-export default function CandidateDetails() {
-  const router = useRouter();
-  const { id } = router.query;
-
+export default function CandidateDetails({ candidateId }) {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load from localStorage
-    const stored = localStorage.getItem("selectedCandidate");
-    if (stored) {
-      try {
-        setData(JSON.parse(stored));
-      } catch {}
-    }
-  }, [id]);
+    console.log("Candidate ID:", candidateId);
 
-  if (!data) return <div className="p-6">Loading...</div>;
+    if (!candidateId) return;
+
+    const fetchCandidate = async () => {
+      try {
+        setLoading(true);
+
+        const res = await authAPI.getCandidateProfile(candidateId);
+        console.log("API RESPONSE:", res);
+
+        const parsed =
+          res?.body && typeof res.body === "string"
+            ? JSON.parse(res.body)
+            : res;
+
+        setData(parsed);
+      } catch (err) {
+        console.error("Error fetching candidate:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidate();
+  }, [candidateId]);
+
+  // ✅ Loading UI
+  if (loading) {
+    return (
+      <div className="p-6 text-gray-400">
+        Loading candidate details...
+      </div>
+    );
+  }
+
+  // ✅ Empty state
+  if (!data) {
+    return (
+      <div className="p-6 text-red-400">
+        Candidate not found
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] text-white p-6">

@@ -8,13 +8,13 @@ import JobApplicationsView from "../components/JobApplicationsView";
 import LinkedinView from "../components/LinkedinView";
 import GithubActivitiesView from "../components/GithubActivitiesView";
 import ProfileView from "../components/ProfileView";
-import Portfolio from "../components/Portfolio";
+import PortfolioView from "../components/PortfolioView";
 
 export default function CandidateDetails() {
   const router = useRouter();
   const { id } = router.query;
 
-  const [activeTab, setActiveTab] = useState("applications");
+  const [activeTab, setActiveTab] = useState("profile");
 
   if (!id) return null; // ✅ prevent undefined
 
@@ -85,7 +85,7 @@ export default function CandidateDetails() {
         )}
 
         {activeTab === "portfolio" && (
-          <div>Portfolio UI pending</div>
+          <PortfolioView candidateId={id} />
         )}
 
       </div>

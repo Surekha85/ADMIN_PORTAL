@@ -73,6 +73,14 @@ html, body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* ===================
    Link Hover Effects
 =================== */

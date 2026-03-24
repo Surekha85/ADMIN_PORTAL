@@ -125,7 +125,11 @@ export const authAPI = {
   getCandidates: async () => {
     return makeAPIRequest("/admin/candidates");
   },
-  /* 📊 CANDIDATE DETAILS */
+  
+  /* 📊 CANDIDATE PROFILE */
+  getCandidateProfile: async (candidate_id) => {
+    return makeAPIRequest(`/admin/candidates/${candidate_id}`);
+  },
 
   getJobApplications: async (candidateId, date) => {
     return makeAPIRequest(
