@@ -51,7 +51,7 @@ export default function PortfolioDashboard({ candidateId }) {
 
   const fetchCandidate = async () => {
     try {
-      const res = await authAPI.getCandidateDetails(candidateId);
+      const res = await authAPI.getCandidateProfile(candidateId);
       setCandidate(res);
     } catch {}
   };
@@ -73,7 +73,7 @@ export default function PortfolioDashboard({ candidateId }) {
 
         <div>
           <h1 className="text-xl font-semibold">
-            Portfolio Details
+            Portfolio Details of {candidate?.first_name} {candidate?.last_name}
           </h1>
         </div>
       </div>
@@ -94,7 +94,7 @@ export default function PortfolioDashboard({ candidateId }) {
 
                 <div>
                   <h2 className="font-semibold">
-                    {candidate?.name || "Candidate"}
+                    {candidate?.first_name} {candidate?.last_name}
                   </h2>
                   <p className="text-xs text-[var(--text-secondary)]">
                     {candidate?.email || "—"}
@@ -109,7 +109,7 @@ export default function PortfolioDashboard({ candidateId }) {
                   <p className="text-[var(--text-secondary)] text-xs">
                     Candidate ID
                   </p>
-                  <p className="font-medium">{candidateId}</p>
+                  <p className="font-medium">{candidate?.jaa_candidate_id}</p>
                 </div>
 
                 <div>
@@ -128,7 +128,7 @@ export default function PortfolioDashboard({ candidateId }) {
             <div className="col-span-2 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm h-full flex flex-col">
 
               <div className="flex justify-between items-center mb-6">
-                <h2 className="font-semibold">Portfolio Details</h2>
+                <h2 className="font-semibold">Portfolio</h2>
 
                 {/* STATUS HERE */}
                 <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary)] text-[var(--primary-contrast)]">

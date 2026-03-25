@@ -85,7 +85,7 @@ export default function AssistantDetails() {
     <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center  gap-4 mb-6">
         <Link href="/assistants" className="relative group">
           <span className="btn-back hover flex items-center gap-2">
             <ArrowLeft size={16} />
@@ -93,8 +93,8 @@ export default function AssistantDetails() {
           </span>
         </Link>
 
-        <h1 className="text-xl font-semibold">
-          {assistant?.first_name} {assistant?.last_name}
+        <h1 className="text-xl font-semibold gap-2">
+          Details of {assistant?.first_name} {assistant?.last_name}
         </h1>
 
         <div />
