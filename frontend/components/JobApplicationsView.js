@@ -265,20 +265,21 @@ export default function JobApplicationsView({ candidateId }) {
                     <p>{j.created_at ? j.created_at.split("T")[0] : "-"}</p>
                   </div>
 
-                  <div className="col-span-2 flex gap-3 mt-3">
-
+                  <div className="col-span-2 flex items-center gap-3 mt-3 flex-nowrap">
                     <button
                       onClick={() => window.open(j.application_link, "_blank")}
-                      className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition"
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition whitespace-nowrap"
                     >
-                      <ExternalLink size={16} /> View Application
+                      <ExternalLink size={16} />
+                      <span>View Application</span>
                     </button>
 
                     <button
                       onClick={() => handleDownload(j.resume_s3_url)}
-                      className="px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition"
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition whitespace-nowrap"
                     >
-                      <Download size={16} /> Download Resume
+                      <Download size={16} />
+                      <span>Download Resume</span>
                     </button>
 
                   </div>

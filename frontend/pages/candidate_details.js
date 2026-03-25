@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { authAPI } from "../services/authAPI";
 import JobApplicationsView from "../components/JobApplicationsView";
 import LinkedinView from "../components/LinkedinView";
 import GithubActivitiesView from "../components/GithubActivitiesView";
@@ -15,8 +16,49 @@ export default function CandidateDetails() {
   const { id } = router.query;
 
   const [activeTab, setActiveTab] = useState("profile");
+  const [candidate, setCandidate] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!id) return null; // ✅ prevent undefined
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchCandidate = async () => {
+      try {
+        setLoading(true);
+        // ✅ API CALL
+        const res = await authAPI.getCandidateProfile(id);
+
+        const parsed =
+          res?.body && typeof res.body === "string"
+            ? JSON.parse(res.body)
+            : res;
+
+        localStorage.setItem(
+          "selectedCandidate",
+          JSON.stringify(parsed) 
+        );
+
+        setCandidate(parsed);
+      } catch (err) {
+        console.error("Error fetching candidate:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidate();
+  }, [id]);
+
+  // SAFE GUARDS
+  if (!id) return null;
+
+  if (loading) {
+    return (
+      <div className="p-6 text-gray-400">
+        Loading candidate details...
+      </div>
+    );
+  }
 
   const tabs = [
     { key: "profile", label: "Profile" },
@@ -30,17 +72,19 @@ export default function CandidateDetails() {
     <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <Link href='/candidates' className="relative group">
+      <div className="flex items-center gap-4 mb-6">
+        <Link href="/candidates" className="relative group">
           <span className="btn-back hover">
             <ArrowLeft size={16} />
             Back to Candidates
           </span>
-        </Link>  
+        </Link>
         
 
         <h1 className="text-xl font-semibold">
-          Details of {id}
+          Details of{" "}
+          {candidate?.first_name || "-"}{" "}
+          {candidate?.last_name || ""}
         </h1>
 
         <div />

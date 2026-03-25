@@ -6,25 +6,12 @@ import { authAPI } from "../services/authAPI";
 
 export default function GithubActivitiesView({ candidateId }) {
 
-  const [candidate, setCandidate] = useState(null);
   const [date, setDate] = useState("");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedProject, setSelectedProject] = useState(null);
-
-  // ✅ TOAST STATE
   const [toast, setToast] = useState("");
-
-  //////////////////////////////////////////////////////
-  // LOAD candidate (only for name display)
-  //////////////////////////////////////////////////////
-  useEffect(() => {
-    const stored = localStorage.getItem("selectedCandidate");
-    if (stored) {
-      setCandidate(JSON.parse(stored));
-    }
-  }, []);
 
   //////////////////////////////////////////////////////
   // DEFAULT DATE
@@ -49,30 +36,32 @@ export default function GithubActivitiesView({ candidateId }) {
     setLoading(true);
     setError("");
     setData(null);
-    setSelectedProject(null);
     try {
       const res = await authAPI.getGithubActivities(candidateId, date);
       setData(res);
     } catch (err) {
-      const msg = err.message || "Failed to fetch GitHub activities";
-      setError(msg);
-      showToast(msg);
+      showToast(err.message || "Failed to fetch GitHub activities");
     } finally {
       setLoading(false);
     }
   };
 
-  const lastFetchedDateRef = useRef("");
+  //////////////////////////////////////////////////////
+  // ✅ FIXED FETCH CONTROL (candidate + date)
+  //////////////////////////////////////////////////////
+  const lastFetchedRef = useRef({ candidateId: "", date: "" });
 
-  //////////////////////////////////////////////////////
-  // 🔥 MAIN EFFECT (FIXED)
-  //////////////////////////////////////////////////////
   useEffect(() => {
     if (!candidateId || !date) return;
 
-    if (lastFetchedDateRef.current === date) return;
+    if (
+      lastFetchedRef.current.candidateId === candidateId &&
+      lastFetchedRef.current.date === date
+    ) {
+      return;
+    }
 
-    lastFetchedDateRef.current = date;
+    lastFetchedRef.current = { candidateId, date };
 
     fetchGithubActivities();
 
@@ -95,30 +84,42 @@ export default function GithubActivitiesView({ candidateId }) {
     localStorage.setItem("selectedDate", newDate);
   };
 
-
-  const totalCommits = selectedProject?.commits?.length || 0;
-
+  //////////////////////////////////////////////////////
+  // SELECT DEFAULT PROJECT
+  //////////////////////////////////////////////////////
   useEffect(() => {
     if (!data?.projects?.length) {
       setSelectedProject(null);
       return;
     }
 
+    // ✅ if already selected, try to find same project in new data
+    if (selectedProject) {
+      const matched = data.projects.find(
+        (p) => p.project_id === selectedProject.project_id
+      );
+
+      if (matched) {
+        setSelectedProject(matched);
+        return;
+      }
+    }
+
+    // ✅ fallback → first project
     setSelectedProject(data.projects[0]);
-  }, [data, date]);
+
+  }, [data]);
+
+  const totalCommits = selectedProject?.commits?.length || 0;
 
   const formatDateTime = (iso) => {
     const d = new Date(iso);
 
-    const date = d.toISOString().split("T")[0];
-
-    const time = d.toLocaleTimeString("en-IN", {
+    return `${d.toISOString().split("T")[0]} ${d.toLocaleTimeString("en-IN", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    });
-
-    return `${date} ${time}`;
+    })}`;
   };
 
   //////////////////////////////////////////////////////
@@ -127,25 +128,18 @@ export default function GithubActivitiesView({ candidateId }) {
   return (
     <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
 
-      {/* 🔥 TOASTER */}
-      {toast.message && (
-        <div className={`fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg z-50 text-white
-          ${toast.type === "error" ? "bg-red-500" : "bg-green-600"}`}>
-          {toast.message}
+      {/* TOAST */}
+      {toast && (
+        <div className="fixed top-5 right-5 px-5 py-3 rounded-lg shadow-lg z-50 text-white bg-red-500">
+          {toast}
         </div>
       )}
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-
-        <div>
-          <h1 className="text-2xl font-bold">GitHub Activities</h1>
-          {candidate && (
-            <p className="text-sm text-gray-500">
-              {candidate.first_name} {candidate.last_name}
-            </p>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold">
+          GitHub Activities (Candidate: {candidateId})
+        </h1>
 
         <input
           type="date"
@@ -160,27 +154,23 @@ export default function GithubActivitiesView({ candidateId }) {
         <div className="text-center text-gray-400">Loading...</div>
       )}
 
-      {/* EMPTY */}
+      {/* DATA */}
       {!loading && data && (
         <>
-          {/* ✅ NO PROJECTS */}
+          {/* EMPTY */}
           {(!data.projects || data.projects.length === 0) && (
             <div className="flex flex-col items-center justify-center mt-24">
-
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mb-6">
-                <span className="text-3xl">📭</span>
+              <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center mb-6">
+                📭
               </div>
-
-              <h2 className="text-lg font-semibold mb-2">
-                No Projects Found
-              </h2>
-
-              <p className="text-gray-400 text-sm text-center">
+              <h2 className="text-lg font-semibold">No Projects Found</h2>
+              <p className="text-gray-400 text-sm">
                 This candidate has no GitHub projects yet.
               </p>
             </div>
           )}
 
+          {/* HAS DATA */}
           {/* ✅ HAS PROJECTS */}
           {data.projects && data.projects.length > 0 && (
             <div className="space-y-6">
@@ -318,11 +308,6 @@ export default function GithubActivitiesView({ candidateId }) {
                         key={i}
                         onClick={() => {
                           setSelectedProject(p);
-
-                          const today = new Date().toISOString().split("T")[0];
-
-                          setDate(today);
-                          localStorage.setItem("selectedDate", today);
                         }}
                         className={`p-4 rounded-xl border cursor-pointer 
                     bg-white dark:bg-[#1e293b] border-gray-200 dark:border-slate-700

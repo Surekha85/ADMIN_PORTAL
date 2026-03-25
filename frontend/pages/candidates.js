@@ -301,7 +301,7 @@ export default function CandidatesPage() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-4 py-2 bg-[var(--border)] rounded"
               >
                 Cancel
               </button>

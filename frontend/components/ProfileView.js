@@ -15,6 +15,24 @@ export default function CandidateDetails({ candidateId }) {
       try {
         setLoading(true);
 
+        //////////////////////////////////////////////////////
+        //  1. CHECK IF DATA ALREADY EXISTS (FROM OTHER PAGE)
+        //////////////////////////////////////////////////////
+        const stored = localStorage.getItem("selectedCandidate");
+        if (stored) {
+          const parsedStored = JSON.parse(stored);
+
+          // ✅ VERY IMPORTANT CHECK
+          if (parsedStored?.id == candidateId) {
+            setData(parsedStored);
+            setLoading(false);
+            return;
+          }
+        }
+
+        //////////////////////////////////////////////////////
+        // 2. FALLBACK TO API
+        //////////////////////////////////////////////////////
         const res = await authAPI.getCandidateProfile(candidateId);
 
         const parsed =

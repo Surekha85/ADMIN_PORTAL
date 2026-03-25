@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { authAPI } from "../services/authAPI";
+
 import JobApplicationsView from "../components/JobApplicationsView";
 import LinkedinView from "../components/LinkedinView";
 import GithubActivitiesView from "../components/GithubActivitiesView";
@@ -18,10 +20,14 @@ export default function AssistantDetails() {
   const [candidates, setCandidates] = useState([]);
   const [assistant, setAssistant] = useState(null);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectedCandidateData, setSelectedCandidateData] = useState(null);
 
   const scrollRef = useRef(null);
   const [showArrows, setShowArrows] = useState(false);
 
+  //////////////////////////////////////////////////////
+  // SCROLL LOGIC
+  //////////////////////////////////////////////////////
   useEffect(() => {
     const checkOverflow = () => {
       if (!scrollRef.current) return;
@@ -56,6 +62,44 @@ export default function AssistantDetails() {
     }
   }, []);
 
+  // FETCH SELECTED CANDIDATE DATA
+  useEffect(() => {
+    if (!selectedCandidate) return;
+
+    const fetchCandidate = async () => {
+      try {
+        // 1. CHECK LOCAL STORAGE FIRST
+        const stored = localStorage.getItem("selectedCandidate");
+        if (stored) {
+          const parsedStored = JSON.parse(stored);
+          if (parsedStored?.id == selectedCandidate) {
+            setSelectedCandidateData(parsedStored);
+            return;
+          }
+        }
+
+        // 2. API CALL
+        const res = await authAPI.getCandidateProfile(selectedCandidate);
+
+        const parsed =
+          res?.body && typeof res.body === "string"
+            ? JSON.parse(res.body)
+            : res;
+
+        setSelectedCandidateData(parsed);
+        localStorage.setItem(
+          "selectedCandidate",
+          JSON.stringify(parsed)
+        );
+
+      } catch (err) {
+        console.error("Error fetching candidate:", err);
+      }
+    };
+
+    fetchCandidate();
+  }, [selectedCandidate]);
+
   //////////////////////////////////////////////////////
   // HANDLERS
   //////////////////////////////////////////////////////
@@ -85,76 +129,107 @@ export default function AssistantDetails() {
     <div className="min-h-screen p-6 bg-[var(--bg)] text-[var(--text)]">
 
       {/* HEADER */}
-      <div className="flex items-center  gap-4 mb-6">
-        <Link href="/assistants" className="relative group">
-          <span className="btn-back hover flex items-center gap-2">
-            <ArrowLeft size={16} />
-            Back to Assistants
-          </span>
-        </Link>
+<div className="flex items-center justify-between mb-6">
 
-        <h1 className="text-xl font-semibold gap-2">
-          Details of {assistant?.first_name} {assistant?.last_name}
-        </h1>
+  {/* LEFT SIDE */}
+  <div className="flex items-center gap-4">
 
-        <div />
+    <Link href="/assistants" className="relative group">
+      <span className="btn-back hover flex items-center gap-2">
+        <ArrowLeft size={16} />
+        Back to Assistants
+      </span>
+    </Link>
+
+    {/* CANDIDATE INFO */}
+    <div className="flex items-center gap-3">
+      {/* Name + Label */}
+      <div>
+        <p className="text-sm">
+          Details of {selectedCandidateData?.first_name || "-"} {selectedCandidateData?.last_name || ""}
+        </p>
       </div>
 
+    </div>
+  </div>
+
+  {/* RIGHT SIDE → ASSISTANT */}
+  <div className="flex items-center gap-3">
+
+    {/* Assistant Avatar */}
+    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+      {assistant?.first_name?.[0] || "A"}
+    </div>
+
+    <div>
+      <p className="text-xs text-gray-400">
+        Assistant
+      </p>
+      <p className="text-sm font-medium">
+        {assistant?.first_name} {assistant?.last_name}
+      </p>
+    </div>
+
+  </div>
+
+</div>
+
+      {/* CANDIDATE SCROLLER */}
       <div className="flex items-center gap-2 mb-6">
 
   {/* LEFT ARROW SPACE */}
-  {showArrows ? (
+        {showArrows ? (
     <button
       onClick={scrollLeft}
       className="flex-shrink-0 h-9 w-9 flex items-center justify-center
       rounded-full border border-[var(--border)]
       bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
     >
-      ←
-    </button>
-  ) : (
+            ←
+          </button>
+        ) : (
     <div className="w-9" /> // keeps spacing consistent
-  )}
+        )}
 
   {/* SCROLL LIST */}
-  <div
-    ref={scrollRef}
-    className="flex-1 flex items-center gap-3 overflow-x-auto scrollbar-hide"
-  >
-    {candidates.map((cid, index) => (
-      <button
-        key={cid || index}
-        onClick={() => handleCandidateClick(cid)}
+        <div
+          ref={scrollRef}
+          className="flex-1 flex items-center gap-3 overflow-x-auto scrollbar-hide"
+        >
+          {candidates.map((cid, index) => (
+            <button
+              key={cid || index}
+              onClick={() => handleCandidateClick(cid)}
         className={`
           px-4 py-1.5 text-sm font-medium rounded-full border whitespace-nowrap transition
 
           ${
-            selectedCandidate === cid
+                selectedCandidate === cid
               ? "bg-[var(--primary)] text-white border-[var(--primary)]"
               : "bg-[var(--card)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
           }
         `}
-      >
-      {cid}
-      </button>
-    ))}
-  </div>
+            >
+              {cid}
+            </button>
+          ))}
+        </div>
 
   {/* RIGHT ARROW SPACE */}
-  {showArrows ? (
+        {showArrows ? (
     <button
       onClick={scrollRight}
       className="flex-shrink-0 h-9 w-9 flex items-center justify-center
       rounded-full border border-[var(--border)]
       bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
     >
-      →
-    </button>
-  ) : (
-    <div className="w-9" />
-  )}
+            →
+          </button>
+        ) : (
+          <div className="w-9" />
+        )}
 
-</div>
+      </div>
 
       <div className="grid grid-cols-5 border-b border-[var(--border)] mb-6">
         {tabs.map((tab) => (
@@ -171,6 +246,8 @@ export default function AssistantDetails() {
           </button>
         ))}
       </div>
+
+      {/* CONTENT */}
       <div className="p-6 rounded-xl bg-[var(--card)] border border-[var(--border)]">
 
         {!selectedCandidate ? (
@@ -180,23 +257,23 @@ export default function AssistantDetails() {
         ) : (
           <>
             {activeTab === "profile" && (
-              <ProfileView candidateId={selectedCandidate} />
+              <ProfileView candidateId={selectedCandidate}  key={selectedCandidate}/>
             )}
 
             {activeTab === "applications" && (
-              <JobApplicationsView candidateId={selectedCandidate} />
+              <JobApplicationsView candidateId={selectedCandidate} key={selectedCandidate} />
             )}
 
             {activeTab === "linkedin" && (
-              <LinkedinView candidateId={selectedCandidate} />
+              <LinkedinView candidateId={selectedCandidate} key={selectedCandidate}/>
             )}
 
             {activeTab === "github" && (
-              <GithubActivitiesView candidateId={selectedCandidate} />
+              <GithubActivitiesView candidateId={selectedCandidate} key={selectedCandidate}/>
             )}
 
             {activeTab === "portfolio" && (
-              <Portfolio candidateId={selectedCandidate} />
+              <Portfolio candidateId={selectedCandidate} key={selectedCandidate} />
             )}
           </>
         )}
