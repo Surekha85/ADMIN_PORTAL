@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { authAPI } from "../services/authAPI";
+import { Copy, Check } from "lucide-react";
 
 export default function CandidateDetails({ candidateId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Candidate ID:", candidateId);
-
     if (!candidateId) return;
 
     const fetchCandidate = async () => {
@@ -17,7 +16,6 @@ export default function CandidateDetails({ candidateId }) {
         setLoading(true);
 
         const res = await authAPI.getCandidateProfile(candidateId);
-        console.log("API RESPONSE:", res);
 
         const parsed =
           res?.body && typeof res.body === "string"
@@ -54,7 +52,7 @@ export default function CandidateDetails({ candidateId }) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] text-white p-6">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
@@ -121,20 +119,55 @@ function Section({ title, children }) {
 }
 
 //////////////////////////////////////////////////////
-// FIELD (CLEAN)
+// FIELD (WITH COPY)
 //////////////////////////////////////////////////////
 function Field({ label, value }) {
-  return (
-    <div className="bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg px-4 py-3">
+  const [copied, setCopied] = useState(false);
 
+  const displayValue =
+    value === null || value === undefined || value === ""
+      ? "-"
+      : typeof value === "boolean"
+      ? String(value)
+      : value;
+
+  const handleCopy = async () => {
+    if (!displayValue || displayValue === "-") return;
+
+    try {
+      await navigator.clipboard.writeText(String(displayValue));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  };
+
+  return (
+    <div className="relative bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg px-4 py-3 group">
+
+      {/* LABEL */}
       <p className="text-xs text-gray-400 mb-1">
         {label}
       </p>
 
-      <p className="text-sm font-medium break-words">
-        {value || "-"}
+      {/* VALUE */}
+      <p className="text-sm font-medium break-words pr-8">
+        {displayValue}
       </p>
 
+      {/* COPY BUTTON */}
+      <button
+        onClick={handleCopy}
+        title={copied ? "Copied!" : "Copy"}
+        className="absolute top-3 right-3 opacity-70 hover:opacity-100 transition"
+      >
+        {copied ? (
+          <Check size={16} className="text-green-400" />
+        ) : (
+          <Copy size={16} className="text-gray-400 hover:text-white" />
+        )}
+      </button>
     </div>
   );
 }
@@ -146,22 +179,10 @@ function RenderObject({ obj }) {
   if (!obj) return null;
 
   return Object.entries(obj).map(([k, v]) => {
+    // ARRAY CASE
     if (Array.isArray(v)) {
       return (
-        <div key={k} className="col-span-2 bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg p-4">
-          <p className="text-xs text-gray-400 mb-2">{k}</p>
-
-          <div className="flex flex-wrap gap-2">
-            {v.map((item, i) => (
-              <span
-                key={i}
-                className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
+        <ArrayField key={k} label={k} value={v} />
       );
     }
 
@@ -169,8 +190,58 @@ function RenderObject({ obj }) {
       <Field
         key={k}
         label={k}
-        value={typeof v === "boolean" ? String(v) : v}
+        value={v}
       />
     );
   });
+}
+
+//////////////////////////////////////////////////////
+// ARRAY FIELD (WITH COPY)
+//////////////////////////////////////////////////////
+function ArrayField({ label, value }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value.join(", "));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error("Copy failed", err);
+    }
+  };
+
+  return (
+    <div className="col-span-2 relative bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg p-4 group">
+
+      <p className="text-xs text-gray-400 mb-2">
+        {label}
+      </p>
+
+      <div className="flex flex-wrap gap-2 pr-8">
+        {value.map((item, i) => (
+          <span
+            key={i}
+            className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs"
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+
+      {/* COPY BUTTON */}
+      <button
+        onClick={handleCopy}
+        title={copied ? "Copied!" : "Copy"}
+        className="absolute top-3 right-3 opacity-70 hover:opacity-100 transition"
+      >
+        {copied ? (
+          <Check size={16} className="text-green-400" />
+        ) : (
+          <Copy size={16} className="text-gray-400 hover:text-white" />
+        )}
+      </button>
+    </div>
+  );
 }
