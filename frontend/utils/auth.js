@@ -81,7 +81,13 @@ export const getCurrentUser = () => {
   if (!token || !user) return null;
 
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    const padded =
+      base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+    const payload = JSON.parse(atob(padded));
     const isExpired = payload.exp < Date.now() / 1000;
 
     if (isExpired) {
@@ -91,7 +97,7 @@ export const getCurrentUser = () => {
     return user;
   } catch (err) {
     console.error("Token decode error:", err);
-    return null; // ✅ no logout here
+    return user;
   }
 };
 

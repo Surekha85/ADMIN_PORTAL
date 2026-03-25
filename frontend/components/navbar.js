@@ -25,9 +25,20 @@ export default function Navbar() {
     setMounted(true);
 
     const loadUser = () => {
-      const currentUser = getCurrentUser();
-      setUser(currentUser);
-    };
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+          setUser(null);
+          return;
+        }
+        const normalizedUser = {
+          email: currentUser.email || "",
+          first_name:currentUser.first_name ||"",
+          last_name: currentUser.last_name || "",
+          full_name:`${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim()
+        };
+
+        setUser(normalizedUser);
+      };
 
     loadUser();
     window.addEventListener("authChanged", loadUser);
@@ -116,7 +127,11 @@ export default function Navbar() {
                   </div>
                   <div>
                     <p className="text-white text-sm font-semibold">
-                      {user?.email}
+                      {user?.full_name || user?.first_name || "User"}
+                    </p>
+
+                    <p className="text-white/80 text-xs">
+                      {user?.email || "No Email"}
                     </p>
                     <p className="text-white/80 text-xs">
                       Welcome back!

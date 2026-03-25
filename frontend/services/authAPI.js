@@ -100,12 +100,20 @@ export const authAPI = {
       throw new Error("Token not found in login response");
     }
 
+    const admin = res?.user;
+    const normalizedUser = {
+      email: admin.email,
+      first_name: admin.first_name,
+      last_name: admin.last_name
+    };
+
     if (typeof window !== "undefined") {
       localStorage.setItem(config.JWT_STORAGE_KEY, token);
       localStorage.setItem(
         config.USER_STORAGE_KEY,
-        JSON.stringify(res?.admin || {})
+        JSON.stringify(normalizedUser)
       );
+      window.dispatchEvent(new Event("authChanged"));
     }
 
     return res;

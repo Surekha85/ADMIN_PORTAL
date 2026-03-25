@@ -13,22 +13,22 @@ export default function AdminDashboard() {
   const [availableHeight, setAvailableHeight] = useState(0);
 
   useEffect(() => {
-    const calculateHeight = () => {
-      const navbar = document.getElementById("app-navbar");
+  const calculateHeight = () => {
+    const navbar = document.getElementById("app-navbar");
 
-      if (navbar) {
-        const navHeight = navbar.offsetHeight;
-        const screenHeight = window.innerHeight;
+    const navHeight = navbar ? navbar.offsetHeight : 0;
+    const screenHeight = window.innerHeight;
 
-        setAvailableHeight(screenHeight - navHeight);
-      }
-    };
+    setAvailableHeight(screenHeight - navHeight);
+  };
 
-    calculateHeight();
-    window.addEventListener("resize", calculateHeight);
+  // ⬇️ IMPORTANT: delay until DOM is ready
+  setTimeout(calculateHeight, 0);
 
-    return () => window.removeEventListener("resize", calculateHeight);
-  }, []);
+  window.addEventListener("resize", calculateHeight);
+
+  return () => window.removeEventListener("resize", calculateHeight);
+}, []);
 
 
   useEffect(() => {
