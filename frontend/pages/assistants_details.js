@@ -20,7 +20,22 @@ export default function AssistantDetails() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   const scrollRef = useRef(null);
+  const [showArrows, setShowArrows] = useState(false);
 
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (!scrollRef.current) return;
+
+      const el = scrollRef.current;
+
+      setShowArrows(el.scrollWidth > el.clientWidth);
+    };
+
+    checkOverflow();
+
+    window.addEventListener("resize", checkOverflow);
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, [candidates]);
   //////////////////////////////////////////////////////
   // LOAD ASSISTANT + CANDIDATES
   //////////////////////////////////////////////////////
@@ -85,55 +100,61 @@ export default function AssistantDetails() {
         <div />
       </div>
 
-      <div className="relative mb-6">
+      <div className="flex items-center gap-2 mb-6">
 
-        {/* LEFT */}
-        <button
-          onClick={scrollLeft}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10
-          h-9 w-9 flex items-center justify-center
-          rounded-full border border-[var(--border)]
-          bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
-        >
-          ←
-        </button>
+  {/* LEFT ARROW SPACE */}
+  {showArrows ? (
+    <button
+      onClick={scrollLeft}
+      className="flex-shrink-0 h-9 w-9 flex items-center justify-center
+      rounded-full border border-[var(--border)]
+      bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
+    >
+      ←
+    </button>
+  ) : (
+    <div className="w-9" /> // keeps spacing consistent
+  )}
 
-        {/* RIGHT */}
-        <button
-          onClick={scrollRight}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10
-          h-9 w-9 flex items-center justify-center
-          rounded-full border border-[var(--border)]
-          bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
-        >
-          →
-        </button>
+  {/* SCROLL LIST */}
+  <div
+    ref={scrollRef}
+    className="flex-1 flex items-center gap-3 overflow-x-auto scrollbar-hide"
+  >
+    {candidates.map((cid, index) => (
+      <button
+        key={cid || index}
+        onClick={() => handleCandidateClick(cid)}
+        className={`
+          px-4 py-1.5 text-sm font-medium rounded-full border whitespace-nowrap transition
 
-        {/* SCROLL LIST */}
-        <div
-          ref={scrollRef}
-          className="flex items-center gap-3 overflow-x-auto scrollbar-hide px-12"
-        >
-          {candidates.map((cid, index) => (
-            <button
-              key={cid || index}
-              onClick={() => handleCandidateClick(cid)}
-              className={`
-                px-4 py-1.5 text-sm font-medium rounded-full border whitespace-nowrap transition
+          ${
+            selectedCandidate === cid
+              ? "bg-[var(--primary)] text-white border-[var(--primary)]"
+              : "bg-[var(--card)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
+          }
+        `}
+      >
+      {cid}
+      </button>
+    ))}
+  </div>
 
-                ${
-                  selectedCandidate === cid
-                    ? "bg-[var(--primary)] text-white border-[var(--primary)]"
-                    : "bg-[var(--card)] border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"
-                }
-              `}
-            >
-              {cid}
-              {/* later replace with name */}
-            </button>
-          ))}
-        </div>
-      </div>
+  {/* RIGHT ARROW SPACE */}
+  {showArrows ? (
+    <button
+      onClick={scrollRight}
+      className="flex-shrink-0 h-9 w-9 flex items-center justify-center
+      rounded-full border border-[var(--border)]
+      bg-[var(--card)] hover:bg-[var(--bg-secondary)]"
+    >
+      →
+    </button>
+  ) : (
+    <div className="w-9" />
+  )}
+
+</div>
 
       <div className="grid grid-cols-5 border-b border-[var(--border)] mb-6">
         {tabs.map((tab) => (

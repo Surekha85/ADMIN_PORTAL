@@ -1,237 +1,207 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { ExternalLink } from "lucide-react";
 import { authAPI } from "../services/authAPI";
 
-export default function PortfolioDashboard() {
-  const [data, setData] = useState([]);
-  const [form, setForm] = useState(initialForm());
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [dark, setDark] = useState(true);
+export default function PortfolioDashboard({ candidateId }) {
+  const router = useRouter();
 
-  function initialForm() {
-    return {
-      jaa_candidate_id: "",
-      github_repo_url: "",
-      github_repo_name: "",
-      vercel_project_name: "",
-      vercel_deployment_url: "",
-      status: "DRAFT",
-      deployment_status: "",
+  const [portfolio, setPortfolio] = useState(null);
+  const [candidate, setCandidate] = useState(null); 
+
+  const [availableHeight, setAvailableHeight] = useState(0);
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      const navbar = document.getElementById("app-navbar");
+
+      if (navbar) {
+        const navHeight = navbar.offsetHeight;
+        const screenHeight = window.innerHeight;
+
+        setAvailableHeight(screenHeight - navHeight);
+      }
     };
-  }
 
-  // 🔹 FETCH DATA
-  const fetchData = async () => {
+    calculateHeight();
+    window.addEventListener("resize", calculateHeight);
+
+    return () => window.removeEventListener("resize", calculateHeight);
+  }, []);
+
+  const normalizePortfolio = (res) => {
+    if (!res) return null;
+    return {
+      ...res,
+      github_repo_url: res.github?.repo_url,
+      github_repo_name: res.github?.repo_name,
+      vercel_project_name: res.vercel?.project_name,
+      vercel_deployment_url: res.vercel?.deployment_url,
+    };
+  };
+
+  const fetchPortfolio = async () => {
     try {
-      const res = await authAPI.getPortfolios();
-      setData(res.items || []);
+      const res = await authAPI.getPortfolio(candidateId);
+      setPortfolio(normalizePortfolio(res));
     } catch (err) {
-      console.error(err);
+      setPortfolio(null);
     }
+  };
+
+  const fetchCandidate = async () => {
+    try {
+      const res = await authAPI.getCandidateDetails(candidateId);
+      setCandidate(res);
+    } catch {}
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  // 🔹 SAVE
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      await authAPI.savePortfolio(form);
-      setOpen(false);
-      setForm(initialForm());
-      fetchData();
-    } catch (err) {
-      alert(err.message);
+    if (candidateId) {
+      fetchPortfolio();
+      fetchCandidate();
     }
-    setLoading(false);
-  };
+  }, [candidateId]);
 
-  // 🔹 STATUS COLORS
-  const getStatus = (status) => {
-    switch (status) {
-      case "LIVE":
-        return "bg-green-500/10 text-green-500";
-      case "DEPLOYING":
-        return "bg-blue-500/10 text-blue-500";
-      case "FAILED":
-        return "bg-red-500/10 text-red-500";
-      default:
-        return "bg-gray-500/10 text-gray-400";
-    }
-  };
-
-  const filtered = data.filter((item) =>
-    JSON.stringify(item).toLowerCase().includes(search.toLowerCase())
-  );
+  const hasPortfolio = !!portfolio;
 
   return (
-    <div className={dark ? "dark bg-gray-900 min-h-screen text-white" : "bg-gray-100 min-h-screen"}>
-      
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+
       {/* HEADER */}
-      <div className="p-6 flex justify-between items-center">
-        <input
-          placeholder="Search portfolios..."
-          className="px-4 py-2 w-1/3 rounded-lg bg-gray-800 text-white border border-gray-700"
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="px-8 py-6 flex items-center gap-4 border-b border-[var(--border)]">
 
-        <div className="flex gap-3">
-          <button
-            onClick={() => setDark(!dark)}
-            className="px-3 py-2 border rounded-lg"
-          >
-            Toggle Theme
-          </button>
-
-          <button
-            onClick={() => setOpen(true)}
-            className="bg-primary px-4 py-2 rounded-lg text-white"
-          >
-            + Portfolio
-          </button>
+        <div>
+          <h1 className="text-xl font-semibold">
+            Portfolio Details
+          </h1>
         </div>
       </div>
 
-      {/* TABLE */}
-      <div className="px-6">
-        <div className="overflow-x-auto rounded-lg border border-gray-700">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-800 text-gray-300">
-              <tr>
-                <th className="p-3 text-left">Candidate</th>
-                <th>Repo</th>
-                <th>Project</th>
-                <th>Status</th>
-                <th>Deployment</th>
-                <th>Updated</th>
-                <th>Action</th>
-              </tr>
-            </thead>
+      <div className="px-8 py-6 flex items-start justify-center overflow-hidden" style={{ height: availableHeight }}>
 
-            <tbody>
-              {filtered.map((row) => (
-                <tr
-                  key={row.jaa_candidate_id}
-                  className="border-t border-gray-700 hover:bg-gray-800"
-                >
-                  <td className="p-3">{row.jaa_candidate_id}</td>
+        {hasPortfolio ? (
+          <div className="grid grid-cols-3 gap-6 w-full max-w-6xl h-full">
 
-                  <td>
-                    <a
-                      href={row.github_repo_url}
-                      target="_blank"
-                      className="text-blue-400"
-                    >
-                      Repo
-                    </a>
-                  </td>
+            {/* 🔥 LEFT: CANDIDATE (SMALL) */}
+            <div className="col-span-1 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm h-full flex flex-col">
 
-                  <td>{row.vercel_project_name}</td>
+              <div className="flex items-center gap-3 mb-4">
 
-                  <td>
-                    <span className={`px-2 py-1 rounded ${getStatus(row.status)}`}>
-                      {row.status}
-                    </span>
-                  </td>
+                <div className="w-10 h-10 rounded-full bg-[var(--primary)] text-[var(--primary-contrast)] flex items-center justify-center font-semibold">
+                  {candidate?.name?.charAt(0)?.toUpperCase() || "C"}
+                </div>
 
-                  <td>{row.deployment_status}</td>
-                  <td>{row.updated_at?.slice(0, 10)}</td>
+                <div>
+                  <h2 className="font-semibold">
+                    {candidate?.name || "Candidate"}
+                  </h2>
+                  <p className="text-xs text-[var(--text-secondary)]">
+                    {candidate?.email || "—"}
+                  </p>
+                </div>
 
-                  <td>
-                    <button
-                      onClick={() => {
-                        setForm(row);
-                        setOpen(true);
-                      }}
-                      className="text-blue-400"
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </div>
 
-      {/* MODAL */}
-      {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          
-          <div className="bg-gray-900 text-white w-[600px] rounded-xl shadow-xl p-6">
-            
-            <h2 className="text-xl font-semibold mb-4">
-              {form.jaa_candidate_id ? "Edit Portfolio" : "Create Portfolio"}
-            </h2>
+              <div className="space-y-3 text-sm">
 
-            <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[var(--text-secondary)] text-xs">
+                    Candidate ID
+                  </p>
+                  <p className="font-medium">{candidateId}</p>
+                </div>
 
-              <Input label="Candidate ID" value={form.jaa_candidate_id} onChange={(v)=>setForm({...form, jaa_candidate_id:v})} full />
+                <div>
+                  <p className="text-[var(--text-secondary)] text-xs">
+                    User ID
+                  </p>
+                  <p className="font-medium">
+                    {portfolio.created_by || "—"}
+                  </p>
+                </div>
 
-              <Input label="GitHub URL" value={form.github_repo_url} onChange={(v)=>setForm({...form, github_repo_url:v})} full />
-
-              <Input label="Repo Name" value={form.github_repo_name} onChange={(v)=>setForm({...form, github_repo_name:v})} />
-
-              <Input label="Project Name" value={form.vercel_project_name} onChange={(v)=>setForm({...form, vercel_project_name:v})} />
-
-              <Input label="Deployment URL" value={form.vercel_deployment_url} onChange={(v)=>setForm({...form, vercel_deployment_url:v})} full />
-
-              <Select label="Status" value={form.status} onChange={(v)=>setForm({...form, status:v})} />
-
-              <Input label="Deployment Status" value={form.deployment_status} onChange={(v)=>setForm({...form, deployment_status:v})} />
-
+              </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={()=>setOpen(false)} className="border px-4 py-2 rounded-lg">
-                Cancel
-              </button>
+            {/* 🔥 RIGHT: PORTFOLIO (BIG) */}
+            <div className="col-span-2 bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm h-full flex flex-col">
 
-              <button onClick={handleSubmit} className="bg-primary px-4 py-2 rounded-lg">
-                {loading ? "Saving..." : "Save"}
-              </button>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="font-semibold">Portfolio Details</h2>
+
+                {/* STATUS HERE */}
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--primary)] text-[var(--primary-contrast)]">
+                  {portfolio.status}
+                </span>
+              </div>
+
+              <div className="space-y-6 text-sm">
+
+                {/* GitHub */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[var(--text-secondary)] text-xs">GitHub</p>
+                    <p className="font-medium">
+                      {portfolio.github_repo_name}
+                    </p>
+                  </div>
+
+                  <a
+                    href={portfolio.github_repo_url}
+                    target="_blank"
+                    className="flex items-center gap-1 text-[var(--primary)] hover:underline"
+                  >
+                    Open <ExternalLink size={14} />
+                  </a>
+                </div>
+
+                {/* Project */}
+                <div>
+                  <p className="text-[var(--text-secondary)] text-xs">Project</p>
+                  <p className="font-medium">
+                    {portfolio.vercel_project_name}
+                  </p>
+                </div>
+
+                {/* Deployment */}
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-[var(--text-secondary)] text-xs">
+                      Deployment
+                    </p>
+                    <p className="font-medium break-all">
+                      {portfolio.vercel_deployment_url}
+                    </p>
+                  </div>
+
+                  <a
+                    href={portfolio.vercel_deployment_url}
+                    target="_blank"
+                    className="flex items-center gap-1 text-[var(--primary)] hover:underline"
+                  >
+                    Visit <ExternalLink size={14} />
+                  </a>
+                </div>
+
+              </div>
             </div>
+
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[70vh] text-center">
 
-// 🔹 INPUT COMPONENT
-function Input({ label, value, onChange, full }) {
-  return (
-    <div className={full ? "col-span-2" : ""}>
-      <label className="text-sm text-gray-400">{label}</label>
-      <input
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none"
-      />
-    </div>
-  );
-}
+            <p className="text-lg font-medium mb-2">
+              No Portfolio Found
+            </p>
 
-// 🔹 SELECT COMPONENT
-function Select({ label, value, onChange }) {
-  return (
-    <div>
-      <label className="text-sm text-gray-400">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 px-3 py-2 rounded-lg bg-gray-800 border border-gray-700"
-      >
-        <option>DRAFT</option>
-        <option>DEPLOYING</option>
-        <option>LIVE</option>
-        <option>FAILED</option>
-        <option>ARCHIVED</option>
-      </select>
+            <p className="text-sm text-[var(--text-secondary)] mb-6">
+              Add a portfolio to get started
+            </p>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

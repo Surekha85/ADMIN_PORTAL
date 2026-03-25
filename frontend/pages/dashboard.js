@@ -10,6 +10,26 @@ export default function AdminDashboard() {
 
   const [candidates, setCandidates] = useState([]);
   const [assistants, setAssistants] = useState([]);
+  const [availableHeight, setAvailableHeight] = useState(0);
+
+  useEffect(() => {
+    const calculateHeight = () => {
+      const navbar = document.getElementById("app-navbar");
+
+      if (navbar) {
+        const navHeight = navbar.offsetHeight;
+        const screenHeight = window.innerHeight;
+
+        setAvailableHeight(screenHeight - navHeight);
+      }
+    };
+
+    calculateHeight();
+    window.addEventListener("resize", calculateHeight);
+
+    return () => window.removeEventListener("resize", calculateHeight);
+  }, []);
+
 
   useEffect(() => {
     loadData();
@@ -42,15 +62,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex bg-[var(--bg)] text-[var(--text)] min-h-screen">
+    <div className="flex bg-[var(--bg)] text-[var(--text)]" style={{ height: availableHeight }}>
 
       {/* SIDEBAR */}
-      <aside className="
-        w-64 bg-[var(--bg)] text-[var(--text)] p-4
-        border-r border-gray-200
-        flex flex-col justify-between
-        rounded-r-2xl shadow-sm
-      ">
+      <aside className="w-72 m-4 rounded-2xl p-5 bg-[var(--card)] border border-[var(--border)] overflow-hidden">
         <div>
           <Menu
             title="Dashboard"

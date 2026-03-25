@@ -232,6 +232,8 @@ export default function AssistantsPage() {
           {assistants.map((a) => {
             const isActive =
               selectedAssistant?.assistantId === a.assistantId;
+            const count = a.assigned_candidates?.length || 0;
+            const isDisabled = count === 0;   
 
             return (
               <div
@@ -312,13 +314,28 @@ export default function AssistantsPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        goToDetails(a);
+                        if (!isDisabled) goToDetails(a);
                       }}
-                      className="text-sm text-[var(--primary)] hover:underline"
+                      disabled={isDisabled}
+                      className={`
+                        text-sm transition-all duration-200
+                        ${isDisabled
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-[var(--primary)] hover:underline"
+                        }
+                      `}
                     >
-                      View Details
+                      {isDisabled ? (
+                        <span className="group relative">
+                          <span className="group-hover:hidden">View Details</span>
+                          <span className="hidden group-hover:inline text-red-400">
+                            No candidates assigned
+                          </span>
+                        </span>
+                      ) : (
+                        "View Details"
+                      )}
                     </button>
-
                   </div>
 
                 </div>
