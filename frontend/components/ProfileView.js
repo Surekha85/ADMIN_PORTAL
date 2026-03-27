@@ -86,7 +86,6 @@ export default function CandidateDetails({ candidateId }) {
           <h1 className="text-2xl font-semibold">
           Profile Details of {data.first_name} {data.last_name}
           </h1>
-
         <div />
       </div>
 
