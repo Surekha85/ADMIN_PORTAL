@@ -7,6 +7,7 @@ import { Copy, Check } from "lucide-react";
 export default function CandidateDetails({ candidateId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState("");
 
   useEffect(() => {
     if (!candidateId) return;
@@ -68,50 +69,66 @@ export default function CandidateDetails({ candidateId }) {
       </div>
     );
   }
-
+  const copy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(
+      typeof text === "object" ? JSON.stringify(text) : text.toString()
+    );
+    setCopied(key);
+    setTimeout(() => setCopied(""), 1200);
+  };
+  
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
 
       {/* HEADER */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-semibold">
-          {data.first_name} {data.last_name}
-        </h1>
+          <h1 className="text-2xl font-semibold">
+          Profile Details of {data.first_name} {data.last_name}
+          </h1>
 
         <div />
       </div>
 
-      {/* GRID */}
-      <div className="space-y-6">
+      {/* BODY */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
+        {/* BASIC */}
         <Section title="Basic Information">
-          <Field label="First Name" value={data.first_name} />
-          <Field label="Last Name" value={data.last_name} />
-          <Field label="Email" value={data.email} />
-          <Field label="Phone" value={data.phone} />
-          <Field label="LinkedIn" value={data.linkedin} />
-          <Field label="GitHub" value={data.github} />
-          <Field label="Assistant" value={data.assistantAssignedTo} />
+          <Field label="first_name" value={data.first_name} copy={copy} copied={copied} id="fn" />
+          <Field label="last_name" value={data.last_name} copy={copy} copied={copied} id="ln" />
+          <Field label="email" value={data.email} copy={copy} copied={copied} id="email" />
+          <Field label="phone" value={data.phone} copy={copy} copied={copied} id="phone" />
+          <Field label="linkedin" value={data.linkedin} copy={copy} copied={copied} id="linkedin" />
+          <Field label="github" value={data.github} copy={copy} copied={copied} id="github" />
+          <Field label="resumeUrl" value={data.resumeUrl} copy={copy} copied={copied} id="resume" />
+          <Field label="createdAt" value={data.createdAt} copy={copy} copied={copied} id="created" />
+          <Field label="updatedAt" value={data.updatedAt} copy={copy} copied={copied} id="updated" />
         </Section>
 
+        {/* ADDRESS */}
         <Section title="Address">
-          <RenderObject obj={data.address} />
+          {renderObject(data.address, copy, copied)}
         </Section>
 
+        {/* CAREER */}
         <Section title="Career Details">
-          <RenderObject obj={data.careerDetails} />
+          {renderObject(data.careerDetails, copy, copied)}
         </Section>
 
+        {/* JOB PREF */}
         <Section title="Job Preferences">
-          <RenderObject obj={data.jobPreferences} />
+          {renderObject(data.jobPreferences, copy, copied)}
         </Section>
 
-        <Section title="Demographics">
-          <RenderObject obj={data.demographic} />
+        {/* DEMOGRAPHIC */}
+        <Section title="Demographic">
+          {renderObject(data.demographic, copy, copied)}
         </Section>
 
+        {/* GMAIL */}
         <Section title="Dedicated Gmail">
-          <RenderObject obj={data.dedicatedGmailAccount} />
+          {renderObject(data.dedicatedGmailAccount, copy, copied)}
         </Section>
 
       </div>
@@ -119,88 +136,29 @@ export default function CandidateDetails({ candidateId }) {
   );
 }
 
-//////////////////////////////////////////////////////
-// SECTION
-//////////////////////////////////////////////////////
-function Section({ title, children }) {
-  return (
-    <div className="bg-[var(--bg)] text-[var(--text)] rounded-2xl p-6 shadow-md">
-      <h2 className="text-lg font-semibold mb-5 text-blue-400">
-        {title}
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {children}
-      </div>
-    </div>
-  );
+/* 🔥 LABEL FORMATTER */
+function formatLabel(key) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/^./, (s) => s.toUpperCase());
 }
 
-//////////////////////////////////////////////////////
-// FIELD (WITH COPY)
-//////////////////////////////////////////////////////
-function Field({ label, value }) {
-  const [copied, setCopied] = useState(false);
-
-  const displayValue =
-    value === null || value === undefined || value === ""
-      ? "-"
-      : typeof value === "boolean"
-      ? String(value)
-      : value;
-
-  const handleCopy = async () => {
-    if (!displayValue || displayValue === "-") return;
-
-    try {
-      await navigator.clipboard.writeText(String(displayValue));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
-      console.error("Copy failed", err);
-    }
-  };
-
-  return (
-    <div className="relative bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg px-4 py-3 group">
-
-      {/* LABEL */}
-      <p className="text-xs text-gray-400 mb-1">
-        {label}
-      </p>
-
-      {/* VALUE */}
-      <p className="text-sm font-medium break-words pr-8">
-        {displayValue}
-      </p>
-
-      {/* COPY BUTTON */}
-      <button
-        onClick={handleCopy}
-        title={copied ? "Copied!" : "Copy"}
-        className="absolute top-3 right-3 opacity-70 hover:opacity-100 transition"
-      >
-        {copied ? (
-          <Check size={16} className="text-green-400" />
-        ) : (
-          <Copy size={16} className="text-gray-400 hover:text-white" />
-        )}
-      </button>
-    </div>
-  );
-}
-
-//////////////////////////////////////////////////////
-// OBJECT RENDER
-//////////////////////////////////////////////////////
-function RenderObject({ obj }) {
+/* 🔥 RENDER OBJECT */
+function renderObject(obj, copy, copied) {
   if (!obj) return null;
 
   return Object.entries(obj).map(([k, v]) => {
-    // ARRAY CASE
     if (Array.isArray(v)) {
       return (
-        <ArrayField key={k} label={k} value={v} />
+        <ChipsBlock
+          key={k}
+          title={formatLabel(k)}
+          data={v}
+          copy={copy}
+          copied={copied}
+          id={k}
+        />
       );
     }
 
@@ -208,58 +166,106 @@ function RenderObject({ obj }) {
       <Field
         key={k}
         label={k}
-        value={v}
+        value={typeof v === "boolean" ? String(v) : v}
+        copy={copy}
+        copied={copied}
+        id={k}
       />
     );
   });
 }
 
-//////////////////////////////////////////////////////
-// ARRAY FIELD (WITH COPY)
-//////////////////////////////////////////////////////
-function ArrayField({ label, value }) {
-  const [copied, setCopied] = useState(false);
+/* SECTION */
+function Section({ title, children }) {
+  return (
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5">
+      <h2 className="text-md font-semibold mb-4 text-blue-500">{title}</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {children}
+      </div>
+    </div>
+  );
+}
 
-  const handleCopy = async () => {
+/* FIELD */
+function Field({ label, value, copy, copied, id }) {
+  const isResume = label === "resumeUrl" && value;
+
+  // Extract file name from URL
+  const getFileName = (url) => {
     try {
-      await navigator.clipboard.writeText(value.join(", "));
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (err) {
-      console.error("Copy failed", err);
+      return url.split("/").pop().split("?")[0];
+    } catch {
+      return "resume";
     }
   };
 
+  const handleDownload = () => {
+    if (!value) return;
+    const link = document.createElement("a");
+    link.href = value;
+    link.download = getFileName(value);
+    link.target = "_blank";
+    link.click();
+  };
+
   return (
-    <div className="col-span-2 relative bg-[var(--bg)] text-[var(--text)] border border-gray-700 rounded-lg p-4 group">
+    <div className="flex justify-between items-center border border-[var(--border)] rounded-lg px-3 py-2 bg-[var(--bg-secondary)]">
+      
+      <div className="overflow-hidden">
+        <p className="text-xs text-[var(--text-secondary)]">
+          {formatLabel(label)}
+        </p>
 
-      <p className="text-xs text-gray-400 mb-2">
-        {label}
-      </p>
+        {/* ✅ Show filename instead of full URL */}
+        <p className="text-sm font-medium truncate">
+          {isResume ? getFileName(value) : (value || "-")}
+        </p>
+      </div>
 
-      <div className="flex flex-wrap gap-2 pr-8">
-        {value.map((item, i) => (
-          <span
-            key={i}
-            className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-xs"
+      <div className="flex items-center gap-2">
+
+        {/* ✅ DOWNLOAD ICON ONLY FOR RESUME */}
+        {isResume ? (
+          <button
+            onClick={handleDownload}
+            className="opacity-70 hover:opacity-100"
+            title="Download Resume"
           >
+            ⬇️
+          </button>
+        ) : (
+          <button
+            onClick={() => copy(value, id)}
+            className="opacity-70 hover:opacity-100"
+          >
+            {copied === id ? <Check size={16} /> : <Copy size={16} />}
+          </button>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+/* CHIPS */
+function ChipsBlock({ title, data, copy, copied, id }) {
+  return (
+    <div className="col-span-2 border border-[var(--border)] rounded-lg p-3 bg-[var(--bg-secondary)]">
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-xs text-[var(--text-secondary)]">{title}</p>
+        <button onClick={() => copy(data.join(", "), id)}>
+          {copied === id ? <Check size={16} /> : <Copy size={16} />}
+        </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {data.map((item, i) => (
+          <span key={i} className="px-3 py-1 rounded-full bg-[var(--bg)] text-sm">
             {item}
           </span>
         ))}
       </div>
-
-      {/* COPY BUTTON */}
-      <button
-        onClick={handleCopy}
-        title={copied ? "Copied!" : "Copy"}
-        className="absolute top-3 right-3 opacity-70 hover:opacity-100 transition"
-      >
-        {copied ? (
-          <Check size={16} className="text-green-400" />
-        ) : (
-          <Copy size={16} className="text-gray-400 hover:text-white" />
-        )}
-      </button>
     </div>
   );
 }

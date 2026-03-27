@@ -138,7 +138,7 @@ export default function GithubActivitiesView({ candidateId }) {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">
-          GitHub Activities (Candidate: {candidateId})
+          GitHub Activities
         </h1>
 
         <input

@@ -146,7 +146,7 @@ export default function AssistantsPage() {
     } catch (err) {
       console.error("Create Assistant Error:", err);
 
-      // ✅ CLEAN ERROR MESSAGE
+      // CLEAN ERROR MESSAGE
       toast.error(err.message || "Error creating assistant", {
         id: "create",
       });
@@ -200,10 +200,10 @@ export default function AssistantsPage() {
         <button
           onClick={() => setShowModal(true)}
           className="
-      px-4 py-2 rounded-lg
-      bg-[var(--primary)]/20 text-[var(--primary)]
-      hover:bg-[var(--primary)]/30
-    "
+              px-4 py-2 rounded-lg
+              bg-[var(--primary)]/20 text-[var(--primary)]
+              hover:bg-[var(--primary)]/30
+            "
         >
           + Create Assistant
         </button>
@@ -213,7 +213,7 @@ export default function AssistantsPage() {
       {assistants.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-[60vh]">
 
-          <div className="w-20 h-20 mb-6 flex items-center justify-center rounded-full bg-[var(--border)] text-3xl">
+          <div className="w-20 h-20 mb-6 flex items-center justify-center rounded-full text-3xl">
             👨‍💼
           </div>
 

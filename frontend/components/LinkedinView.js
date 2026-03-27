@@ -169,7 +169,7 @@ export default function LinkedInActivities({ candidateId }) {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-semibold">
-              LinkedIn Activities of {candidateId}
+              LinkedIn Activities
             </h1>
             <p className="text-sm text-gray-400">
               {week.start} → {week.end}

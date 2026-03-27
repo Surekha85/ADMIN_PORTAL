@@ -136,7 +136,7 @@ export default function JobApplicationsView({ candidateId }) {
 
         <div>
             <h1 className="text-2xl font-semibold">
-              Job Applications of {candidateId}
+              Job Applications
             </h1>
             <p className="text-sm text-gray-400">
               {week.start} → {week.end}
