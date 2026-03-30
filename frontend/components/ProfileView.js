@@ -103,6 +103,27 @@ export default function CandidateDetails({ candidateId }) {
           <Field label="resumeUrl" value={data.resumeUrl} copy={copy} copied={copied} id="resume" />
           <Field label="createdAt" value={data.createdAt} copy={copy} copied={copied} id="created" />
           <Field label="updatedAt" value={data.updatedAt} copy={copy} copied={copied} id="updated" />
+          {/* ASSIGNED ASSISTANTS */}
+        {data.assignedAssistants?.length > 0 && (
+          <div className="col-span-2 border border-[var(--border)] rounded-lg p-3 bg-[var(--bg-secondary)]">
+
+            <p className="text-xs text-[var(--text-secondary)] mb-2">
+              Assigned Assistants
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {data.assignedAssistants.map((a) => (
+                <span
+                  key={a.assistantId}
+                  className="px-3 py-1 rounded-full bg-green-600/20 text-green-400 text-sm"
+                >
+                  {a.assistantName}
+                </span>
+              ))}
+            </div>
+
+          </div>
+        )}
         </Section>
 
         {/* ADDRESS */}
@@ -111,8 +132,8 @@ export default function CandidateDetails({ candidateId }) {
         </Section>
 
         {/* CAREER */}
-        <Section title="Career Details">
-          {renderObject(data.careerDetails, copy, copied)}
+        <Section title="Visa Details">
+          {renderObject(data.visaDetails, copy, copied)}
         </Section>
 
         {/* JOB PREF */}
@@ -148,6 +169,8 @@ function renderObject(obj, copy, copied) {
   if (!obj) return null;
 
   return Object.entries(obj).map(([k, v]) => {
+
+    // ✅ ARRAY
     if (Array.isArray(v)) {
       return (
         <ChipsBlock
@@ -161,6 +184,37 @@ function renderObject(obj, copy, copied) {
       );
     }
 
+    // ✅ OBJECT (🔥 FIX HERE)
+    if (typeof v === "object" && v !== null) {
+
+      // special handling for salaryExpectation
+      if (k === "salaryExpectation") {
+        return (
+          <Field
+            key={k}
+            label={k}
+            value={`${v.min} - ${v.max}`}
+            copy={copy}
+            copied={copied}
+            id={k}
+          />
+        );
+      }
+
+      // generic object → stringify or format
+      return (
+        <Field
+          key={k}
+          label={k}
+          value={JSON.stringify(v)}
+          copy={copy}
+          copied={copied}
+          id={k}
+        />
+      );
+    }
+
+    // ✅ NORMAL VALUES
     return (
       <Field
         key={k}
