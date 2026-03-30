@@ -5,6 +5,9 @@ import { ArrowLeft } from "lucide-react";
 import { authAPI } from "../services/authAPI";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+
 
 export default function CandidatesPage() {
   const router = useRouter();
@@ -18,42 +21,54 @@ export default function CandidatesPage() {
   //////////////////////////////////////////////////////
   // LOAD DATA
   //////////////////////////////////////////////////////
+
+  const loadCandidates = async () => {
+  try {
+    let res = await authAPI.getCandidates();
+
+    if (res?.body) res = JSON.parse(res.body);
+
+    let parsed = [];
+
+    if (typeof res?.candidates === "string") {
+      parsed = JSON.parse(res.candidates);
+    } else if (Array.isArray(res?.candidates)) {
+      parsed = res.candidates;
+    }
+
+    setCandidates(parsed);
+
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+const loadAssistants = async () => {
+  try {
+    let ares = await authAPI.getAssistants();
+
+    if (ares?.body) ares = JSON.parse(ares.body);
+
+    let parsedAssistants = [];
+
+    if (typeof ares?.assistants === "string") {
+      parsedAssistants = JSON.parse(ares.assistants);
+    } else if (Array.isArray(ares?.assistants)) {
+      parsedAssistants = ares.assistants;
+    }
+
+    setAssistants(parsedAssistants);
+
+  } catch (e) {
+    console.error(e);
+  }
+};
+
   useEffect(() => {
     const load = async () => {
-      try {
-        let res = await authAPI.getCandidates();
-
-        if (res?.body) res = JSON.parse(res.body);
-
-        // ✅ FIX: string → array
-        let parsed = [];
-
-        if (typeof res?.candidates === "string") {
-          parsed = JSON.parse(res.candidates);
-        } else if (Array.isArray(res?.candidates)) {
-          parsed = res.candidates;
-        }
-
-        setCandidates(parsed);
-
-        // 🔥 Load assistants also
-        let ares = await authAPI.getAssistants();
-        if (ares?.body) ares = JSON.parse(ares.body);
-
-        let parsedAssistants = [];
-        if (typeof ares?.assistants === "string") {
-          parsedAssistants = JSON.parse(ares.assistants);
-        } else if (Array.isArray(ares?.assistants)) {
-          parsedAssistants = ares.assistants;
-        }
-
-        setAssistants(parsedAssistants);
-
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+      await loadCandidates();
+      await loadAssistants();
+      setLoading(false);
     };
 
     load();
@@ -68,29 +83,34 @@ export default function CandidatesPage() {
   };
 
   const handleAssign = async (assistant) => {
-    try {
-      // 🔥 CALL API
-      await authAPI.assignAssistant({
-        candidateId: selectedCandidate.jaa_candidate_id,
-        assistantId: assistant.assistantId
-      });
+  try {
 
-      // ✅ UPDATE UI AFTER SUCCESS
-      setCandidates(prev =>
-        prev.map(c =>
-          c.jaa_candidate_id === selectedCandidate.jaa_candidate_id
-            ? { ...c, assignedAssistant: assistant }
-            : c
-        )
-      );
+    const res = await authAPI.assignAssistant({
+      candidateId: selectedCandidate.jaa_candidate_id,
+      assistantId: assistant.assistantId
+    });
 
-      setShowAssignModal(false);
-
-    } catch (e) {
-      console.error("Assign error:", e);
-      alert("Failed to assign assistant");
+    // ✅ Handle API Gateway body
+    let data = res;
+    if (res?.body) {
+      data = JSON.parse(res.body);
     }
-  };
+
+    // ✅ SHOW SUCCESS TOAST
+    toast.success(data?.message || "Assistant assigned successfully");
+
+    setShowAssignModal(false);
+
+    // ✅ REFRESH DATA
+    await loadCandidates();
+
+  } catch (e) {
+    console.error("Assign error:", e);
+
+    // ✅ ERROR TOAST
+    toast.error(e?.message || "Failed to assign assistant");
+  }
+};
 
   //////////////////////////////////////////////////////
   // LOADER
@@ -150,8 +170,10 @@ export default function CandidatesPage() {
         <div className="space-y-3">
 
           {candidates.map((a) => {
-            const assigned =
-              a.assistantAssignedTo  || null;
+            const assignedList = a.assignedAssistants || [];
+            const maxVisible = 3;
+            const visible = assignedList.slice(0, maxVisible);
+            const remaining = assignedList.length - maxVisible;
 
             return (
               <div
@@ -193,15 +215,57 @@ export default function CandidatesPage() {
                   </div>
 
                   {/* MIDDLE */}
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center relative">
                     <span className="text-xs text-[var(--text-secondary)]">
-                      Assigned Assistant
+                      Assigned Assistants
                     </span>
 
-                    {assigned ? (
-                      <span className="text-green-500 font-semibold">
-                        {a.first_name} {a.last_name}
-                      </span>
+                    {assignedList.length > 0 ? (
+                      <div className="flex items-center mt-1">
+                        {/* AVATAR STACK */}
+                        <div className="flex -space-x-2" onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCandidate(a);
+                            setShowAssignModal(true);
+                          }}>
+                          {visible.map((asst, i) => (
+                            <div
+                              key={asst.assistantId}
+                              title={asst.assistantName}
+                              className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white text-xs flex items-center justify-center border-2 border-[#0B1120] shadow"
+                            >
+                              {asst.assistantName[0]}
+                            </div>
+                          ))}
+
+                          {/* +N BUTTON */}
+                          {remaining > 0 && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCandidate(a);
+                                setShowAssignModal(true);
+                              }}
+                              className="w-8 h-8 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center border-2 border-[#0B1120] cursor-pointer hover:bg-gray-500"
+                            >
+                              +{remaining}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* EDIT ICON */}
+                        {/* <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCandidate(a);
+                            setShowAssignModal(true);
+                          }}
+                          className="ml-2"
+                        >
+                          <Pencil size={14} className="text-gray-400 hover:text-white" />
+                        </button> */}
+
+                      </div>
                     ) : (
                       <button
                         onClick={(e) => {
@@ -270,31 +334,47 @@ export default function CandidatesPage() {
 
             <div className="space-y-2 max-h-[300px] overflow-y-auto overflow-x-hidden">
 
-              {assistants.map((a) => (
-                <div
-                  key={a.assistantId}
-                  className="p-3 border rounded-lg flex justify-between items-center card-hover"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {a.first_name} {a.last_name}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {a.email}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {a.assistantId}
-                    </p>
-                  </div>
+              {assistants.map((a) => {
+                const isAssigned = selectedCandidate?.assignedAssistants?.some(
+                  (x) => x.assistantId === a.assistantId
+                );
 
-                  <button
-                    onClick={() => handleAssign(a)}
-                    className="text-sm bg-green-500 text-white px-3 py-1 rounded"
+                return (
+                  <div
+                    key={a.assistantId}
+                    className="p-3 border rounded-lg flex justify-between items-center card-hover"
                   >
-                    Assign
-                  </button>
-                </div>
-              ))}
+                    <div>
+                      <p className="font-medium">
+                        {a.first_name} {a.last_name}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {a.email}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {a.assistantId}
+                      </p>
+                    </div>
+
+                    {/* 🔥 CONDITIONAL BUTTON */}
+                    {isAssigned ? (
+                      <button
+                        onClick={() => handleAssign(a)}
+                        className="text-sm bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAssign(a)}
+                        className="text-sm bg-green-500 text-white px-3 py-1 rounded"
+                      >
+                        Assign
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
 
             </div>
 
@@ -311,6 +391,8 @@ export default function CandidatesPage() {
         </div>
       )}
 
+      <Toaster position="top-right" />
+      
     </div>
   );
 }
