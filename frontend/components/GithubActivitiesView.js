@@ -3,9 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { authAPI } from "../services/authAPI";
 
-
 export default function GithubActivitiesView({ candidateId }) {
-
   const [date, setDate] = useState("");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
