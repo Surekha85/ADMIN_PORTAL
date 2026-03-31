@@ -6,7 +6,6 @@ import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-
 export default function AssistantsPage() {
   const router = useRouter();
   const [assistants, setAssistants] = useState([]);
