@@ -14,9 +14,7 @@ import {
 } from "lucide-react";
 
 export default function JobApplicationsView({ candidateId }) {
-
   const today = new Date().toISOString().split("T")[0];
-
   const [data, setData] = useState(null);
   const [date, setDate] = useState(today);
   const [expandedId, setExpandedId] = useState(null);
