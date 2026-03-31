@@ -15,7 +15,6 @@ const taskTypeStyles = {
 };
 
 export default function LinkedInActivities({ candidateId }) {
-
   const [tasks, setTasks] = useState([]);
   const [modalHeight, setModalHeight] = useState("auto");
   const today = new Date().toISOString().split("T")[0];
