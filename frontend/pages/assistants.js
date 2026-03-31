@@ -9,7 +9,6 @@ import Link from "next/link";
 
 export default function AssistantsPage() {
   const router = useRouter();
-
   const [assistants, setAssistants] = useState([]);
   const [selectedAssistant, setSelectedAssistant] = useState(null);
   const [loading, setLoading] = useState(true);
